@@ -413,6 +413,8 @@ Stateful = Classy({
 		
 		// notify the object of the state change and updated properties
 		this.update(changes, newStateObject);
+		this._state = newStateObject;
+		this._stateString = newStateString;
 	},
 	
 	// encode the state into string format
