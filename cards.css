@@ -1,0 +1,209 @@
+/*
+Here is the structure:
+
+<div id="cardsWindow">
+	<div id="cardsContainer">
+		<div class="cardWrapper">
+			<div class="card">
+				<div class="front"></div>
+				<div class="back"></div>
+			</div>
+			<div class="label">
+		</div>
+		<div class="cardWrapper">
+			...
+		<div>
+		...
+	</div>
+</div>
+
+The reason for having a wrapper is to separate the label from the card so that it is not distorted by the flip rotation.
+*/
+
+/* --------- Structure --------- */
+
+#cardsWindow {
+	position: absolute;
+	top: 0;
+	left: 0;
+	bottom: 0;
+	right: 0;
+	border: none;
+	-webkit-perspective: 800;
+	-webkit-user-select: none;
+	border: 1px solid #bbb;
+}
+
+#cards {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+}
+
+.hidden {
+	display: none;
+}
+
+/* --------- Buttons --------- */
+
+#buttons {
+	position: absolute;
+	right: 0;
+	z-index: 10;
+	padding: 1px 0;
+	border: 1px #bbb;
+	border-style: none none solid solid;
+	background: #eee;
+}
+
+#rotateBtn, #addDeckBtn, #decks {
+	float: left;
+}
+
+/* --------- Decks --------- */
+
+#decks {
+	list-style: none;
+	display: inline;
+	padding: 0;
+	margin: 0;
+}
+
+#decks li {
+	float: left;
+	width: 16px;
+	height: 22px;
+	margin: 0 5px;
+	cursor: pointer;
+	background: url(deck/smallbluedeck.png);
+}
+#decks li.red { background: url(deck/smallreddeck.png) }
+#decks li.green { background: url(deck/smallgreendeck.png) }
+
+/* --------- Selection Box --------- */
+
+#selectionBox {
+	border: 1px solid rgba(0, 0, 0, 0.2);
+	background-color: rgba(200, 200, 200, 0.3);
+	position: absolute;
+	z-index: 2000000;
+}
+
+/* --------- Cards --------- */
+
+.cardWrapper {
+	width: 73px;
+	height: 97px;
+	position: absolute;
+}
+
+.cardWrapper.highliht {
+	/*margin-left: -35px;
+	padding-left: 35px;
+	padding-right: 35px;*/
+	outline: 1px solid black;
+}
+
+.card {
+	-webkit-transform-style: preserve-3d;
+}
+
+.card, .back, .front {
+	/*top: 0;
+	left: 0;*/
+	width: 73px;
+	height: 97px;
+	position: absolute;
+}
+
+.facedown .front, .faceup .back {
+	visibility: hidden;
+}
+
+/* --------- Card Graphics --------- */
+
+      .card .back { background: url(deck/bluecard.png) }
+  .red.card .back { background: url(deck/redcard.png) }
+.green.card .back { background: url(deck/greencard.png) }
+
+.hearts   { background: url(deck/hearts.png) }
+.clubs    { background: url(deck/clubs.png) }
+.diamonds { background: url(deck/diamonds.png) }
+.spades   { background: url(deck/spades.png) }
+
+.ace   { background-position:    0px 0 }
+.two   { background-position:  -73px 0 }
+.three { background-position: -146px 0 }
+.four  { background-position: -219px 0 }
+.five  { background-position: -292px 0 }
+.six   { background-position: -365px 0 }
+.seven { background-position: -438px 0 }
+.eight { background-position: -511px 0 }
+.nine  { background-position: -584px 0 }
+.ten   { background-position: -657px 0 }
+.jack  { background-position: -730px 0 }
+.queen { background-position: -803px 0 }
+.king  { background-position: -876px 0 }
+
+.joker { background: url(deck/j.png) }
+
+/* --------- Highlight --------- */
+
+.highlight .card {
+	outline: 5px solid #000;
+}
+
+/* Each player gets a different highlight color */
+.highlight.p1 .card, .p1 .label { background-color: #ff0; outline-color: #ff0 }
+.highlight.p2 .card, .p2 .label { background-color: #0ff; outline-color: #0ff }
+.highlight.p3 .card, .p3 .label { background-color: #f0f; outline-color: #f0f }
+.highlight.p4 .card, .p4 .label { background-color: #0f0; outline-color: #0f0 }
+.highlight.p5 .card, .p5 .label { background-color: #f86; outline-color: #f86 }
+.highlight.p6 .card, .p6 .label { background-color: #88f; outline-color: #88f }
+.highlight.p7 .card, .p7 .label { background-color: #f00; outline-color: #f00 }
+.highlight.p8 .card, .p8 .label { background-color: #00f; outline-color: #00f }
+
+/* --------- Peeking --------- */
+
+.peeking.facedown .front, .peeking.faceup .back {
+	/* show the top corner */
+	visibility: visible;
+	clip: rect(0px, 36px, 50px, 0px);
+}
+.peeking.facedown .back {
+	/* put the back down in the stacking order so the front corner can show. */
+	position: static;
+}
+.peeked .card {
+	border: 3px dotted black;
+	padding: 1px;
+	margin: -4px;
+	outline-width: 1px;
+}
+
+/* --------- Label --------- */
+
+.cardWrapper .label {
+	position: absolute;
+	bottom: 0px;
+	left: 0px;
+	z-index: 1500000;
+	padding: 5px;
+	visibility: hidden;
+	opacity: 0;
+}
+.label:empty {
+	display: none;
+}
+
+/* --------- Selected cards --------- */
+
+.selected.faceup .front, .selected.facedown .back {
+	outline: 2px solid rgba(0, 0, 0, 0.5);
+	outline-offset: -1px;
+	/*outline: 5px auto -webkit-focus-ring-color;*/
+	/*background-color: black !important;*/
+}
+.selected .front, .selected .back {
+	/*opacity: .87;*/
+}

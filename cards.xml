@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Module>
+  <ModulePrefs
+    title="Cards"
+    height="480"
+    description="Play card games in Google Wave."
+    author="Charles Lehner"
+    author_email="cel@wavesandbox.com">
+   <Require feature="wave"/>
+  </ModulePrefs>
+
+  <Content type="html">
+  <![CDATA[
+  
+  <script type="text/javascript" src="http://wave-api.appspot.com/public/wave.js"></script>
+  <script type="text/javascript" src="http://www.lehnerstudios.com:4000/lib/classy-min.js"></script>
+  <script type="text/javascript" src="http://www.lehnerstudios.com:4000/lib/transitions.js"></script>
+  <script type="text/javascript" src="http://www.lehnerstudios.com:4000/wave/cards2/lib.js"></script>
+  <script type="text/javascript" src="http://www.lehnerstudios.com:4000/wave/cards2/cards.js"></script>
+  <link rel="stylesheet" href="http://www.lehnerstudios.com:4000/wave/cards2/cards.css" type="text/css">
+  
+  <div id="cardsWindow">
+    <div id="buttons">
+      <ul id="decks"></ul>
+      <button id="addDeckBtn" title="Add a deck">+</button>
+      <button id="rotateBtn" title="Turn the table">&crarr;</button>
+    </div>
+    
+    <div id="cards"></div>
+  </div>
+  
+
+  ]]></Content>
+</Module>
