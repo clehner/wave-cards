@@ -1,6 +1,8 @@
 <extension 
-    name="Cards"
-    description="Play card games using this gadget.">
+    name="Play Cards"
+    description="Play card games using this gadget."
+    thumbnailUrl="">
+  <author name="Charles Lehner"/>
   <menuHook location="toolbar" text="Insert a playing cards gadget." 
       iconUrl="http://wave-cards.googlecode.com/svn/trunk/deck/smallbluedeck.png">
     <insertGadget url="http://wave-cards.googlecode.com/svn/trunk/cards.xml"/>
