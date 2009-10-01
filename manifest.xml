@@ -3,6 +3,6 @@
     description="Play card games using this gadget.">
   <menuHook location="toolbar" text="Insert a playing cards gadget." 
       iconUrl="http://wave-cards.googlecode.com/svn/trunk/deck/smallbluedeck.png">
-    <insertGadget url="http://wave-api.appspot.com/public/gadgets/areyouin/gadget.xml"/>
+    <insertGadget url="http://wave-cards.googlecode.com/svn/trunk/cards.xml"/>
   </menuHook>
 </extension>
