@@ -42,6 +42,7 @@ var
 	players = [],          // wave participants
 	highestId = 0,         // highest card id
 	highestZ = 0,          // highest z-index of a card
+	hasFocus,              // whether the window has the user's focus
 	
 	me,                    // the participant whose client renders the gadget
 	things = {},           // objects (cards and decks) encoded in the wave state
@@ -97,7 +98,7 @@ gadgets.util.registerOnLoadHandler(gadgetLoad);
 
 // called when the wave state is updated
 function stateUpdated() {
-	var keys, i, key, value, thing, currentStateValues;
+	var keys, i, key, value, thing;
 	
 	// we must wait for the players list before loading the cards
 	if (!playersLoaded) {
@@ -109,7 +110,7 @@ function stateUpdated() {
 		return;
 	}
 	keys = waveState.getKeys();
-	currentStateValues = {};
+	waveStateValues = {};
 	
 	// Update stuff
 	for (i=0; (key=keys[i]); i++) {
@@ -140,13 +141,8 @@ function participantsUpdated() {
 		// This is the first participant update
 		if (!me) me = wave.getViewer();
 		if (!me) return;
-		//isHost = (wave.getHost() == me);
 		playersLoaded = true;
 		stateUpdated();
-		
-		/*if (isHost) {
-			removeClass(document.getElementById("hostButtons"), "hidden");
-		}*/
 	}
 }
 
@@ -165,8 +161,10 @@ function onMouseDown(e) {
 		}
 		CardSelection.add(card);
 
-		// prevent dragging the images in firefox
-		if (e.preventDefault) e.preventDefault();
+		if (hasFocus) {
+			// prevent dragging the images in firefox
+			if (e.preventDefault) e.preventDefault();
+		}
 		
 	} else {
 		// mousedown on empty space, create a selection box.
@@ -256,8 +254,14 @@ function onKeyUp(e) {
 	}
 }
 
+
+function onFocus() {
+	hasFocus = true;
+}
+
 // stop dragging cards when the window loses focus
 function onBlur() {
+	hasFocus = false;
 	if (drag) {
 		onMouseUp();
 	}
@@ -287,9 +291,6 @@ function getThing(key) {
 function addDeck() {
 	var newDeck, cards, card, i, s, r;
 	
-	// only host can create decks?
-	//if (!isHost) return;
-	
 	newDeck = getThing("deck_"+(++highestId));
 	cards = newDeck.cards;
 	i = 0;
@@ -299,7 +300,7 @@ function addDeck() {
 			with(cards[i++] = getThing("card_"+(++highestId))) {
 				suit = s;
 				rank = r;
-				x = y = 20 + ~~(i/3);
+				stateX = stateY = 30 + ~~(i/3);
 				z = ++highestZ;
 				deck = newDeck;
 				queueUpdate();
@@ -431,28 +432,29 @@ Stateful = Classy({
 	},
 	
 	// send the wave an update of this item's state
-	sendUpdate: function () {
-		var stateString = this.makeStateString();
-
-		this.delta[this.key] = stateString;
+	sendUpdate: function (local) {
+		this.queueUpdate(local);
 		this.flushUpdates();
 	},
 	
 	// queue the item to be updated later.
-	queueUpdate: function () {
-		var newState = this.makeStateString();
-		this.delta[this.key] = newState;
+	queueUpdate: function (local) {
+		var stateString = this.makeStateString();
+		this.delta[this.key] = stateString;
+		if (local) {
+			this.updateState(stateString);
+		}
 	},
 	
 	// send queued deltas
-	flushUpdates: function () {
+	flushUpdates: function (local) {
 		waveState.submitDelta(this.delta);
 		Stateful.prototype.delta = {};
 	},
 	
 	// send the update soon
-	asyncUpdate: function () {
-		this.queueUpdate();
+	asyncUpdate: function (local) {
+		this.queueUpdate(local);
 		if (!Stateful.updateTimeout) {
 			Stateful.updateTimeout = setTimeout(function () {
 				Stateful.prototype.flushUpdates();
@@ -602,8 +604,8 @@ Card = Classy(Stateful, {
 	width: 73,
 	height: 97,
 	title: "",
-	renderedX: NaN,
-	renderedY: NaN,
+	stateX: 0,
+	stateY: 0,
 	renderedZ: NaN,
 	oldX: 0,
 	oldY: 0,
@@ -634,8 +636,8 @@ Card = Classy(Stateful, {
 				deck: deck ? deck.id : "",
 				suit: suit,
 				rank: rank,
-				x: ~~x,
-				y: ~~y,
+				x: ~~stateX,
+				y: ~~stateY,
 				z: ~~z,
 				flip: faceup ? "f" : "",
 				moving: moving ? "m" : "",
@@ -732,8 +734,8 @@ Card = Classy(Stateful, {
 		}
 
 		if (changes.x || changes.y) {
-			this.x = ~~newState.x;
-			this.y = ~~newState.y;
+			this.stateX = ~~newState.x;
+			this.stateY = ~~newState.y;
 			this.renderPosition(true);
 		}
 		
@@ -751,23 +753,7 @@ Card = Classy(Stateful, {
 		if (changes.user) {
 			// the user who last touched the card
 			this.user = wave.getParticipantById(newState.user);
-			var playerNum = players.indexOf(this.user)+1;
-			
-			// replace old class with new one
-			if (this.userClass) {
-				removeClass(this.dom.wrapper, this.userClass);
-			}
-			this.userClass = "p"+playerNum;
-			addClass(this.dom.wrapper, this.userClass);
-			
-			//timeout?
-			if (this.user) {
-				// Set the label to the player's first name,
-				// or blank if they are the viewer.
-				var userLabel = (this.user == me) ? "" :
-					this.user.getDisplayName().match(/^[^ ]+/, '')[0];
-				this.dom.label.innerHTML = userLabel;
-			}
+			this.renderUserLabel();
 		}
 		
 		if (changes.flip) {
@@ -862,7 +848,7 @@ Card = Classy(Stateful, {
 		if (this.movingNow) {
 			this.x = this.dom.wrapper.offsetLeft;
 			this.y = this.dom.wrapper.offsetTop;
-			this.renderPosition();
+			this.renderPositionStatic();
 		}
 		
 		this.startX = x - this.x;
@@ -881,12 +867,12 @@ Card = Classy(Stateful, {
 		this.oldY = this.y;
 		this.x = x - this.startX;
 		this.y = y - this.startY;
-		this.renderPosition();
+		this.renderPositionStatic();
 	},
 	
 	dragEnd: function () {
-		this.x = this.renderedX;
-		this.y = this.renderedY;
+		this.stateX = this.x;
+		this.stateY = this.y;
 		
 		this.moving = false;
 		
@@ -958,7 +944,8 @@ Card = Classy(Stateful, {
 					
 						// This would mean raising a card above itself,
 						// which is not possible. Abort!
-						return;
+						console.log('knot');
+						return false;
 					} else {
 						
 						// it overlaps, therefore it will be raised too.
@@ -989,8 +976,11 @@ Card = Classy(Stateful, {
 			}
 			
 			card.z += raiseAmount;
+			card.renderZ();
 			card.queueUpdate();
 		}
+		
+		return true;
 	},
 		
 	/* -------------- Card View functions -------------- */
@@ -1002,8 +992,28 @@ Card = Classy(Stateful, {
 		var suit = this.suits[this.suit];
 		addClass(this.dom.front, rank);
 		addClass(this.dom.front, suit);
-		this.title = rank+" of "+suit;
+		this.title = rank + " of " + suit;
 		this.dom.front.setAttribute("title", this.title);
+	},
+	
+	renderUserLabel: function () {
+		var playerNum = players.indexOf(this.user)+1;
+		
+		// replace old class with new one
+		if (this.userClass) {
+			removeClass(this.dom.wrapper, this.userClass);
+		}
+		this.userClass = "p"+playerNum;
+		addClass(this.dom.wrapper, this.userClass);
+		
+		//timeout?
+		if (this.user) {
+			// Set the label to the player's first name,
+			// or blank if they are the viewer.
+			var userLabel = (this.user == me) ? "" :
+				this.user.getDisplayName().match(/^[^ ]+/, '')[0];
+			this.dom.label.innerHTML = userLabel;
+		}
 	},
 
 	// If the user wants to peek at the card, show a corner of the back through the front.
@@ -1057,17 +1067,17 @@ Card = Classy(Stateful, {
 	
 	// move the card to its x and y.
 	renderPosition: function (transition) {
-		if ((this.x == this.renderedX) && (this.y == this.renderedY)) {
+		if ((this.x == this.stateX) && (this.y == this.stateY)) {
 			// no change
 			return;
 		}
 		
-		var oldX = this.renderedX;
+		var oldX = this.x;
 		
-		this.renderedX = ~~this.x;
-		this.renderedY = ~~this.y;
+		this.x = ~~this.stateX;
+		this.y = ~~this.stateY;
 		
-		if (transition && !isNaN(oldX)) {
+		if (transition && !isNaN(this.x)) {
 			var $this = this;
 			this.movingNow = true;
 			this.renderHighlight();
@@ -1080,14 +1090,22 @@ Card = Classy(Stateful, {
 			});
 			
 		} else {
-			this.movingNow = false;
-			this.dom.wrapper.style.left = this.renderedX + "px";
-			this.dom.wrapper.style.top = this.renderedY + "px";
+			this.renderPositionStatic();
 		}
+	},
+	
+	renderPositionStatic: function () {
+		this.movingNow = false;
+		this.dom.wrapper.style.left = this.x + "px";
+		this.dom.wrapper.style.top = this.y + "px";
 	},
 	
 	// set the z-index of the element to the z of the object.
 	renderZ: function () {
+		if (this.z === this.renderedZ) {
+			return false;
+		}
+		
 		if (this.z > 100000) {
 			// problem: the z-index shouldn't get this high in the first place.
 			this.z = 0;
@@ -1359,16 +1377,14 @@ var CardSelection = {
 				// Raise the Z of one pile over one card.
 				if (dragUnderMode) {
 					overlappee.raise(overlapper);
-					//overlapper.raiseAbove(overlappee);
 				} else {
 					overlapper.raise(CardSelection.cards);
-					//overlappee.raiseAbove(overlapper);
 				}
 				
 				// Restore overlappee position.
 				overlappee.x = realX;
 				overlappee.y = realY;
-				overlappee.sendUpdate();
+				overlappee.sendUpdate(true);
 				
 				// Because the selection's Z has changed, recalculate its
 				// bounds.
@@ -1445,17 +1461,19 @@ var CardSelection = {
 
 	// flip the positions of the cards, not just the faces.
 	flip: function () {
-		//debugger;
 		this.refreshBounds();
 		
 		var xx = 2 * this.x + this.width,
 		zz = this.z + this.z1;
 		
 		this.cards.forEach(function (card) {
-			card.x = xx - (card.x + card.width);
+			card.stateX = xx - (card.x + card.width);
 			card.z = zz - card.z;
-			card.flip();
+			//card.flip();
+			card.faceup = !card.faceup;
+			card.queueUpdate(true);
 		});
+		Stateful.prototype.flushUpdates();
 	},
 
 	// shuffle the positions of the selected cards
