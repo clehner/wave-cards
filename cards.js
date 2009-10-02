@@ -1491,13 +1491,14 @@ var CardSelection = {
 		shuffle(positions);
 		positions.forEach(function (pos, i) {
 			with(cards[i]) {
-				x = pos.x;
-				y = pos.y;
+				stateX = pos.x;
+				stateY = pos.y;
 				z = pos.z;
 				faceup = pos.faceup;
-				asyncUpdate();
+				queueUpdate(true);
 			}
 		});
+		Stateful.prototype.flushUpdates();
 	}
 };
 
