@@ -2,7 +2,7 @@
 Here is the structure:
 
 <div id="cardsWindow">
-	<div id="cardsContainer">
+	<div id="cards">
 		<div class="cardWrapper">
 			<div class="card">
 				<div class="front"></div>
@@ -75,10 +75,10 @@ The reason for having a wrapper is to separate the label from the card so that i
 	height: 22px;
 	margin: 0 5px;
 	cursor: pointer;
-	background: url(deck/smallbluedeck.png);
+	background: url(images/smallbluedeck.png);
 }
-#decks li.red { background: url(deck/smallreddeck.png) }
-#decks li.green { background: url(deck/smallgreendeck.png) }
+#decks li.red { background: url(images/smallreddeck.png) }
+#decks li.green { background: url(images/smallgreendeck.png) }
 
 /* --------- Selection Box --------- */
 
@@ -98,9 +98,6 @@ The reason for having a wrapper is to separate the label from the card so that i
 }
 
 .cardWrapper.highliht {
-	/*margin-left: -35px;
-	padding-left: 35px;
-	padding-right: 35px;*/
 	outline: 1px solid black;
 }
 
@@ -109,8 +106,6 @@ The reason for having a wrapper is to separate the label from the card so that i
 }
 
 .card, .back, .front {
-	/*top: 0;
-	left: 0;*/
 	width: 73px;
 	height: 97px;
 	position: absolute;
@@ -122,14 +117,14 @@ The reason for having a wrapper is to separate the label from the card so that i
 
 /* --------- Card Graphics --------- */
 
-      .card .back { background: url(deck/bluecard.png) }
-  .red.card .back { background: url(deck/redcard.png) }
-.green.card .back { background: url(deck/greencard.png) }
+      .card .back { background: url(images/bluecard.png) }
+  .red.card .back { background: url(images/redcard.png) }
+.green.card .back { background: url(images/greencard.png) }
 
-.hearts   { background: url(deck/hearts.png) }
-.clubs    { background: url(deck/clubs.png) }
-.diamonds { background: url(deck/diamonds.png) }
-.spades   { background: url(deck/spades.png) }
+.hearts   { background: url(images/hearts.png) }
+.clubs    { background: url(images/clubs.png) }
+.diamonds { background: url(images/diamonds.png) }
+.spades   { background: url(images/spades.png) }
 
 .ace   { background-position:    0px 0 }
 .two   { background-position:  -73px 0 }
@@ -145,7 +140,7 @@ The reason for having a wrapper is to separate the label from the card so that i
 .queen { background-position: -803px 0 }
 .king  { background-position: -876px 0 }
 
-.joker { background: url(deck/j.png) }
+.joker { background: url(images/j.png) }
 
 /* --------- Highlight --------- */
 
@@ -171,7 +166,7 @@ The reason for having a wrapper is to separate the label from the card so that i
 	clip: rect(0px, 36px, 50px, 0px);
 }
 .peeking.facedown .back {
-	/* put the back down in the stacking order so the front corner can show. */
+	/* lower the back in the stacking order so the front corner can show. */
 	position: static;
 }
 .peeked .card {
