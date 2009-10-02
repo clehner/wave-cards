@@ -4,7 +4,7 @@
     thumbnailUrl="">
   <author name="Charles Lehner"/>
   <menuHook location="toolbar" text="Insert a playing cards gadget." 
-      iconUrl="http://wave-cards.googlecode.com/svn/trunk/deck/smallbluedeck.png">
+      iconUrl="http://wave-cards.googlecode.com/svn/trunk/images/smallbluedeck.png">
     <insertGadget url="http://wave-cards.googlecode.com/svn/trunk/cards.xml"/>
   </menuHook>
 </extension>
