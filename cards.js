@@ -1003,7 +1003,7 @@ Card = Classy(Stateful, {
 		if (this.userClass) {
 			removeClass(this.dom.wrapper, this.userClass);
 		}
-		this.userClass = "p"+playerNum;
+		this.userClass = "p" + ((playerNum % 8) + 1);
 		addClass(this.dom.wrapper, this.userClass);
 		
 		//timeout?
@@ -1471,7 +1471,7 @@ var CardSelection = {
 			card.z = zz - card.z;
 			//card.flip();
 			card.faceup = !card.faceup;
-			card.queueUpdate(true);
+			card.queueUpdate();
 		});
 		Stateful.prototype.flushUpdates();
 	},
@@ -1495,7 +1495,7 @@ var CardSelection = {
 				stateY = pos.y;
 				z = pos.z;
 				faceup = pos.faceup;
-				queueUpdate(true);
+				queueUpdate();
 			}
 		});
 		Stateful.prototype.flushUpdates();
