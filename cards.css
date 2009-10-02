@@ -48,11 +48,11 @@ The reason for having a wrapper is to separate the label from the card so that i
 
 #buttons {
 	position: absolute;
-	right: 0;
+	left: 0;
 	z-index: 10;
 	padding: 1px 0;
 	border: 1px #bbb;
-	border-style: none none solid solid;
+	border-style: none solid solid none;
 	background: #eee;
 }
 
@@ -202,8 +202,4 @@ The reason for having a wrapper is to separate the label from the card so that i
 	outline: 2px solid rgba(0, 0, 0, 0.5);
 	outline-offset: -1px;
 	/*outline: 5px auto -webkit-focus-ring-color;*/
-	/*background-color: black !important;*/
-}
-.selected .front, .selected .back {
-	/*opacity: .87;*/
 }

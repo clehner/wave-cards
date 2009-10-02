@@ -20,9 +20,9 @@
   
   <div id="cardsWindow">
     <div id="buttons">
-      <ul id="decks"></ul>
-      <button id="addDeckBtn" title="Add a deck">+</button>
       <button id="rotateBtn" title="Turn the table">&crarr;</button>
+      <button id="addDeckBtn" title="Add a deck">+</button>
+      <ul id="decks"></ul>
     </div>
     
     <div id="cards"></div>
