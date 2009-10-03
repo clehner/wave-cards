@@ -399,8 +399,6 @@ Stateful = Classy({
 		if (!newStateString) this.remove();
 		if (this.removed) return; // don't wake the dead
 		
-		this.loaded = true;
-		
 		// first compare state by string to see if it is different at all.
 		if (newStateString == this._stateString) return;
 		
@@ -424,6 +422,7 @@ Stateful = Classy({
 		this.update(changes, newStateObject);
 		this._state = newStateObject;
 		this._stateString = newStateString;
+		this.loaded = true;
 	},
 	
 	// encode the state into string format
@@ -670,13 +669,11 @@ Card = Classy(Stateful, {
 			front: card.childNodes[0],
 			back: card.childNodes[1]
 		};
-		// Give the dom elements reference to this card object
+		
+		// Give the dom elements references to this card object
 		for (var node in this.dom) {
 			this.dom[node].object = this;
 		}
-		
-		// Insert card into the page.
-		cardsContainer.appendChild(this.dom.wrapper);
 	},
 	
 	remove: function () {
@@ -713,6 +710,12 @@ Card = Classy(Stateful, {
 	},
 	
 	update: function (changes, newState) {
+	
+		if (!this.loaded) {
+			// then this is the first state update.
+			// Insert the card into the page.
+			cardsContainer.appendChild(this.dom.wrapper);
+		}
 	
 		if (changes.suit || changes.rank) {
 			if (changes.suit) this.suit = newState.suit;
@@ -952,7 +955,7 @@ Card = Classy(Stateful, {
 					
 						// This would mean raising a card above itself,
 						// which is not possible. Abort!
-						console.log('knot');
+						//console.log('knot');
 						return false;
 					} else {
 						
