@@ -81,6 +81,7 @@ function gadgetLoad() {
 	addEventListener("keydown", onKeyDown, false);
 	addEventListener("keyup", onKeyUp, false);
 	addEventListener("blur", onBlur, false);
+	addEventListener("focus", onFocus, false);
 	cardsContainer.addEventListener("mousedown", onMouseDown, false);
 	document.getElementById("rotateBtn").addEventListener("click",
 		rotateTable, false);
@@ -139,10 +140,11 @@ function participantsUpdated() {
 	
 	if (!playersLoaded) {
 		// This is the first participant update
-		if (!me) me = wave.getViewer();
-		if (!me) return;
-		playersLoaded = true;
-		stateUpdated();
+		me = wave.getViewer();
+		if (me) {
+			playersLoaded = true;
+			stateUpdated();
+		}
 	}
 }
 
@@ -310,11 +312,17 @@ function addDeck() {
 	newDeck.sendUpdate();
 }
 
-// rotate the cards 90 degrees
+// rotate the cards container 90 degrees
 function rotateTable() {
-	rotation = (rotation + 90) % 360;
-	cardsContainer.style[Transition.cssTransformType] =
-		"rotate(" + rotation + "deg)";
+	var oldRotation = rotation;
+	rotation += 90;
+	var rotater = function (n) {
+		return "rotate(" + (oldRotation + 90 * n) + "deg)";
+	};
+
+	var t = {};
+	t[Transition.cssTransformType] = rotater;
+	Transition(cardsContainer, t, transitionDuration);
 }
 
 // get the coordinates of a point rotated around another point a certain angle
@@ -804,7 +812,7 @@ Card = Classy(Stateful, {
 				$this.renderHighlight();
 				$this.asyncUpdate();
 			}
-		}, transitionDuration*4);
+		}, transitionDuration);
 	},
 	
 	// return whether an object is overlapping another.

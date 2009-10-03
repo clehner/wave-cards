@@ -22,7 +22,10 @@ Transition = (function () {
 				(function () { // to do: fix this thing so it doesn't need this
 				
 					var startTime = +new Date();
-					var computedStyle = document.defaultView.getComputedStyle(elm);
+					
+					var style = elm.style;
+					//var computedStyle = document.defaultView.getComputedStyle(elm);
+					// getComputedStyle is too slow.
 					
 					// the value to transition the property to
 					var value = css[property];
@@ -31,28 +34,30 @@ Transition = (function () {
 					if (typeof value == "function") value = value(1);
 	
 					// ignore if no difference
-					if (computedStyle[property] == value) return;
+					if (style[property] == value) return;
 					
-					// change "ThisType" to "-this-type"
+					// change "PropertyName" to "-property-name"
 					var property2 = property.replace(/[A-Z]/g, function (l) {
-						return "-"+l.toLowerCase();
+						return "-" + l.toLowerCase();
 					});
-					
 					
 					// stop any previous transition on the this property of this element.
 					var oldT = elm._transitions[property];
 					if (oldT) oldT.stopWithoutReset();
 					
-					if (!computedStyle.WebkitTransitionProperty ||
-						computedStyle.WebkitTransitionProperty == "all" ||
-						computedStyle.WebkitTransitionProperty == "none") {
-							elm.style.WebkitTransitionProperty = property2;
-					} else if (!computedStyle.WebkitTransitionProperty.match(new RegExp("(\\s|^)"+property2+"(,\\s|$)"))) {
-						elm.style.WebkitTransitionProperty = computedStyle.WebkitTransitionProperty+", "+property2;
+					// set the transition property.
+					var transProp = style.WebkitTransitionProperty;
+					if (!transProp || transProp == "all" || transProp == "none") {
+						style.WebkitTransitionProperty = property2;
+						
+					} else if (!transProp.match(new RegExp("(\\s|^)" +
+						property2 + "(,\\s|$)"))) {
+						
+						style.WebkitTransitionProperty = transProp + ", " + property2;
 					}
 					
-					elm.style.WebkitTransitionDuration = duration+"ms";
-					elm.style[property] = value;
+					style.WebkitTransitionDuration = duration+"ms";
+					style[property] = value;
 					
 					// There is a problem here. The elm._transitions[property] (transition cached in the element) is not being deleted by delete. To compensate for this, when the transition is told to stop, we only execute the done callback if it's time is right. If it is too late, then the callback is not called, because the transition already ended and should have been deleted from the cache, but it wasn't because the delete didn't work! Or maybe instead the problem is not delete but that it is not being added to the cache array (elm._transitions) in the first place. Or it is replacing a previous item. Argh!
 					// I changed stuff and it might be fixed now.
@@ -70,7 +75,7 @@ Transition = (function () {
 						done = true;
 					};
 					t.stop = function () {
-						elm.style.WebkitTransitionProperty = elm.style.WebkitTransitionProperty
+						style.WebkitTransitionProperty = style.WebkitTransitionProperty
 							.replace(new RegExp(property2+"(,\\s|$)|(,\\s|^)"+property2+
 							"|^"+property2+"$", "g"), "")||"none";
 						
@@ -87,7 +92,7 @@ Transition = (function () {
 		T.isNative = true;
 	
 	} else {
-		// Emulate Webkit's CSS transitions
+		// Emulate CSS transitions
 	
 		var transitions = [], // current transitions
 		timerOn = false, // whether the timer is running

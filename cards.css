@@ -1,8 +1,8 @@
 /*
-Here is the structure:
+This is the HTML structure:
 
 <div id="cardsWindow">
-	<div id="cards">
+	<div id="cardsContainer">
 		<div class="cardWrapper">
 			<div class="card">
 				<div class="front"></div>
@@ -106,6 +106,8 @@ The reason for having a wrapper is to separate the label from the card so that i
 }
 
 .card, .back, .front {
+	/*top: 0;
+	left: 0;*/
 	width: 73px;
 	height: 97px;
 	position: absolute;
@@ -166,7 +168,7 @@ The reason for having a wrapper is to separate the label from the card so that i
 	clip: rect(0px, 36px, 50px, 0px);
 }
 .peeking.facedown .back {
-	/* lower the back in the stacking order so the front corner can show. */
+	/* put the back down in the stacking order so the front corner can show. */
 	position: static;
 }
 .peeked .card {
@@ -196,5 +198,4 @@ The reason for having a wrapper is to separate the label from the card so that i
 .selected.faceup .front, .selected.facedown .back {
 	outline: 2px solid rgba(0, 0, 0, 0.5);
 	outline-offset: -1px;
-	/*outline: 5px auto -webkit-focus-ring-color;*/
 }
