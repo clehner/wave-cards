@@ -114,19 +114,22 @@ function stateUpdated() {
 	waveStateValues = {};
 	
 	// Update stuff
-	for (i=0; (key=keys[i]); i++) {
+	for (i = 0; (key=keys[i]); i++) {
 		value = waveState.get(key);
-		waveStateValues[key] = value;
-		
-		thing = getThing(key);
-		thing.updateState(value);
+		if (value) {
+			waveStateValues[key] = value;
+			
+			thing = getThing(key);
+			thing.updateState(value);
+		}
 	}
 	
 	// Check for deleted values
 	// Look for keys that were in the state before but now are not.
-	for (i=waveStateKeys.length; i--;) {
-		if (!(waveStateKeys[i] in waveStateValues)) {
-			thing = getThing(waveStateKeys[i]);
+	for (i = waveStateKeys.length; i--;) {
+		key = waveStateKeys[i];
+		if (!(key in waveStateValues)) {
+			thing = getThing(key);
 			thing.remove();
 		}
 	}
@@ -396,7 +399,7 @@ Stateful = Classy({
 	
 	// update the state of the item
 	updateState: function (newStateString) {
-		if (!newStateString) this.remove();
+		if (!newStateString && this.removed) this.remove();
 		if (this.removed) return; // don't wake the dead
 		
 		// first compare state by string to see if it is different at all.
@@ -473,7 +476,6 @@ Stateful = Classy({
 	// delete this object
 	remove: function () {
 		this.removed = true;
-		delete things[this.key];
 	},
 	
 	markForRemoval: function () {
@@ -534,7 +536,7 @@ Deck = Classy(Stateful, {
 			card.markForRemoval();
 			card.queueUpdate();
 		});
-		this.remove();
+		//this.remove();
 		Stateful.prototype.markForRemoval.call(this);
 	},
 	
@@ -955,7 +957,7 @@ Card = Classy(Stateful, {
 					
 						// This would mean raising a card above itself,
 						// which is not possible. Abort!
-						//console.log('knot');
+						//if (window.console) console.log('knot');
 						return false;
 					} else {
 						
@@ -1331,6 +1333,9 @@ var CardSelection = {
 				if (overlappee) {
 					// Collision!
 					
+					// Overlappee is the card in the selection that is
+					// being overlapped by the overlapper, card.
+					
 					overlappees[card.id] = overlappee;
 					overlappers[j++] = card;
 				}
@@ -1353,7 +1358,7 @@ var CardSelection = {
 	},
 	
 	drag: function (x, y) {
-		var cards, overlapper, i, oldOverlappees, overlappers, overlappee;
+		var cards, overlapper, i, oldOverlappees, overlappers, overlappee, oldOverlappee;
 		
 		// update the position of each card
 		cards = this.cards;
@@ -1371,13 +1376,13 @@ var CardSelection = {
 		
 		for (i = 0; overlapper = overlappers[i]; i++) {
 
-			overlappee = oldOverlappees[overlapper.id]; // in the selection
-			if (!overlappee) {
-				overlappee = this.overlappees[overlapper.id];
-
-				// New overlap.
+			oldOverlappee = oldOverlappees[overlapper.id];
+			overlappee = this.overlappees[overlapper.id];
+			if (overlappee != oldOverlappee) {
+				// The overlap is new, or with a different card than before.
 				
-				// Temporarily move back the overlappee before it was overlapping.
+				// Temporarily move back the overlappee to before it was
+				// overlapping, so it doesn't get in the way of itself.
 				with(overlappee) {
 					var realX = x;
 					var realY = y;
@@ -1402,7 +1407,7 @@ var CardSelection = {
 				this.refreshBounds();
 				
 				// don't need to test for any more collisions, because
-				// "overlaps" is ordered by significance
+				// the overlaps are ordered by significance
 				break;
 			}
 		}
