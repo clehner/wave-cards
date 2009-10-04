@@ -23,9 +23,8 @@ Transition = (function () {
 				
 					var startTime = +new Date();
 					
-					var style = elm.style;
-					//var computedStyle = document.defaultView.getComputedStyle(elm);
-					// getComputedStyle is too slow.
+					var style = document.defaultView.getComputedStyle(elm);
+					// TODO: get rid of getComputedStyle because it is slow.
 					
 					// the value to transition the property to
 					var value = css[property];
@@ -48,21 +47,17 @@ Transition = (function () {
 					// set the transition property.
 					var transProp = style.WebkitTransitionProperty;
 					if (!transProp || transProp == "all" || transProp == "none") {
-						style.WebkitTransitionProperty = property2;
+						elm.style.WebkitTransitionProperty = property2;
 						
 					} else if (!transProp.match(new RegExp("(\\s|^)" +
 						property2 + "(,\\s|$)"))) {
 						
-						style.WebkitTransitionProperty = transProp + ", " + property2;
+						elm.style.WebkitTransitionProperty = transProp + ", " + property2;
 					}
 					
-					style.WebkitTransitionDuration = duration+"ms";
-					style[property] = value;
-					
-					// There is a problem here. The elm._transitions[property] (transition cached in the element) is not being deleted by delete. To compensate for this, when the transition is told to stop, we only execute the done callback if it's time is right. If it is too late, then the callback is not called, because the transition already ended and should have been deleted from the cache, but it wasn't because the delete didn't work! Or maybe instead the problem is not delete but that it is not being added to the cache array (elm._transitions) in the first place. Or it is replacing a previous item. Argh!
-					// I changed stuff and it might be fixed now.
-					// I suck at commenting!
-					// and coding.
+					elm.style.WebkitTransitionDuration = duration+"ms";
+					//console.log('prop:'+property+' value: '+value+'. old: '+elm.style[property]);
+					elm.style[property] = value;
 	
 					var endTimeout;
 					var t = {};
@@ -75,9 +70,11 @@ Transition = (function () {
 						done = true;
 					};
 					t.stop = function () {
-						style.WebkitTransitionProperty = style.WebkitTransitionProperty
-							.replace(new RegExp(property2+"(,\\s|$)|(,\\s|^)"+property2+
-							"|^"+property2+"$", "g"), "")||"none";
+						elm.style.WebkitTransitionProperty =
+							style.WebkitTransitionProperty.
+							replace(new RegExp(property2 + "(,\\s|$)|(,\\s|^)" +
+							property2 + "|^" + property2 + "$", "g"), "") ||
+							"none";
 						
 						delete elm._transitions[property];
 						if (cb && !done) cb.call(elm, (new Date - startTime) / duration);
