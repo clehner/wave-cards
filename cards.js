@@ -49,9 +49,9 @@ var
 	waveState,             // the wave gadget state
 	waveStateKeys = [],    // the keys of the gadget state
 	waveStateValues = {},  // the values of the gadget state
-	playersLoaded = false,
+	gadgetLoaded = false,
 	stateLoaded = false,
-	gadgetLoaded = false;
+	participantsLoaded = false;
 
 /*
 #cardsWindow
@@ -61,32 +61,35 @@ var
   #cards
 */
 
-/* -------------- State stuff -------------- */
+/* ---------------------------- Gadget State ---------------------------- */
 
 function gadgetLoad() {
 	// run once
 	if (gadgetLoaded) return;
 
-	// Get dom references
+	// Get DOM references
 	cardsContainer = document.getElementById("cards");
 	cardsWindow = document.getElementById("cardsWindow");
 	decksContainer = document.getElementById("decks");
 	
-	// Wait for cardsContainer to be available
+	// Wait for everything to be available
 	if (!cardsContainer) {
 		return setTimeout(arguments.callee, 20);
 	}
 	
-	// Attach the listeners
+	// Attach event listeners
 	addEventListener("keydown", onKeyDown, false);
 	addEventListener("keyup", onKeyUp, false);
 	addEventListener("blur", onBlur, false);
 	addEventListener("focus", onFocus, false);
 	cardsContainer.addEventListener("mousedown", onMouseDown, false);
-	document.getElementById("rotateBtn").addEventListener("click",
-		rotateTable, false);
-	document.getElementById("addDeckBtn").addEventListener("click",
-		addDeck, false);
+	
+	document.getElementById("helpBtn").addEventListener("click", HelpBox.show, false);
+	document.getElementById("rotateBtn").addEventListener("click", rotateTable, false);
+	document.getElementById("addDeckBtn").addEventListener("click", addDeck, false);
+	
+	document.getElementById("closeHelpBtn").addEventListener(
+		"click", HelpBox.hide, false);
 	
 	// Set up wave callbacks
 	if (wave && wave.isInWaveContainer()) {
@@ -102,7 +105,7 @@ function stateUpdated() {
 	var keys, i, key, value, thing;
 	
 	// we must wait for the players list before loading the cards
-	if (!playersLoaded) {
+	if (!participantsLoaded) {
 		return;
 	}
 	
@@ -116,7 +119,7 @@ function stateUpdated() {
 	// Update stuff
 	for (i = 0; (key=keys[i]); i++) {
 		value = waveState.get(key);
-		if (value) {
+		if (typeof value == "string") {
 			waveStateValues[key] = value;
 			
 			thing = getThing(key);
@@ -124,8 +127,8 @@ function stateUpdated() {
 		}
 	}
 	
-	// Check for deleted values
-	// Look for keys that were in the state before but now are not.
+	// Check for deleted objects
+	// by keys that were in the state before but now are not
 	for (i = waveStateKeys.length; i--;) {
 		key = waveStateKeys[i];
 		if (!(key in waveStateValues)) {
@@ -135,21 +138,68 @@ function stateUpdated() {
 	}
 	
 	waveStateKeys = keys;
-	stateLoaded = true;
-}
-
-function participantsUpdated() {
-	players = wave.getParticipants();
 	
-	if (!playersLoaded) {
-		// This is the first participant update
-		me = wave.getViewer();
-		if (me) {
-			playersLoaded = true;
-			stateUpdated();
+	if (!stateLoaded) {
+		stateLoaded = true;
+		if (participantsLoaded) {
+			onEverythingLoad();
 		}
 	}
 }
+
+// called by Wave
+function participantsUpdated() {
+	players = wave.getParticipants();
+	me = wave.getViewer();
+	
+	if (!participantsLoaded && me) {
+		participantsLoaded = true;
+		stateUpdated();
+		if (stateLoaded) {
+			onEverythingLoad();
+		}
+	}
+}
+
+// called after the first state and participants updates have been received.
+function onEverythingLoad() {
+		
+	// If the gadget state is empty and there are no cards, create a deck.
+	if (waveStateKeys.length == 0) {
+		addDeck();
+	}
+	
+	// If it is the viewer's first visit, show them the help screen.
+	var myState = getThing("player_" + me.getId());
+	if (myState.firstVisit) {
+		HelpBox.show();
+		myState.firstVisit = false;
+		myState.sendUpdate();
+	}
+}
+
+// get a stateful object (card or deck) by its key in the wave state
+function getThing(key) {
+	if (!things[key]) {
+		var key2 = key.split("_");
+		var type = key2[0];
+		var id = ~~key2[1];
+		
+		var Constructor =
+			type == "card" ? Card :
+			type == "deck" ? Deck :
+			type == "player" ? Player :
+		Stateful;
+			
+		var thing = new Constructor(id, key);
+		
+		things[key] = thing;
+	}
+	
+	return things[key];
+}
+
+/* ---------------------------- Event listeners ---------------------------- */
 
 function onMouseDown(e) {
 	// start mouse drag
@@ -259,7 +309,6 @@ function onKeyUp(e) {
 	}
 }
 
-
 function onFocus() {
 	hasFocus = true;
 }
@@ -270,26 +319,6 @@ function onBlur() {
 	if (drag) {
 		onMouseUp();
 	}
-}
-
-// get a stateful object (card or deck) by its key in the wave state
-function getThing(key) {
-	if (things[key]) {
-		return things[key];
-	}
-	
-	var key2 = key.split("_");
-	var type = key2[0];
-	var id = ~~key2[1];
-	highestId = Math.max(highestId, id);
-	
-	var thing =
-		type == "card" ? new Card(id, key) :
-		type == "deck" ? new Deck(id, key) :
-		new Stateful(id, key);
-	
-	things[key] = thing;
-	return thing;
 }
 
 // create a deck of cards
@@ -315,12 +344,12 @@ function addDeck() {
 	newDeck.sendUpdate();
 }
 
-// rotate the cards container 90 degrees
+// rotate the cards container 180 degrees
 function rotateTable() {
 	var oldRotation = rotation;
-	rotation += 90;
+	rotation += 180;
 	var rotater = function (n) {
-		return "rotate(" + (oldRotation + 90 * n) + "deg)";
+		return "rotate(" + (oldRotation + 180 * n) + "deg)";
 	};
 
 	var t = {};
@@ -328,9 +357,8 @@ function rotateTable() {
 	Transition(cardsContainer, t, transitionDuration);
 }
 
-// get the coordinates of a point rotated around another point a certain angle
+// get the coordinates of a point rotated around another point by a certain angle
 function rotatePoint(x, y, a, w, h) {
-	//a %= 360;
 	a = a % 360 + (a < 0 ? 360 : 0);
 	switch (a) {
 		case 0:
@@ -373,7 +401,7 @@ function toggleClass(ele, cls, yes) {
 	else removeClass(ele, cls);
 }
 
-/* -------------- Stateful -------------- */
+/* ---------------------------- Stateful ---------------------------- */
 
 // an object that maintains its state in a node of the wave state.
 Stateful = Classy({
@@ -488,7 +516,7 @@ Stateful = Classy({
 	update: function () {}
 });
 
-/* -------------- Deck -------------- */
+/* ---------------------------- Deck ---------------------------- */
 
 Deck = Classy(Stateful, {
 	stateNames: ["color", "cards"],
@@ -503,6 +531,8 @@ Deck = Classy(Stateful, {
 	constructor: function () {
 		Stateful.apply(this, arguments);
 		this.cards = [];
+		
+		highestId = Math.max(highestId, this.id);
 		
 		this.icon = document.createElement("li");
 		
@@ -577,7 +607,7 @@ Deck = Classy(Stateful, {
 
 
 
-/* -------------- Card -------------- */
+/* ---------------------------- Card ---------------------------- */
 
 Card = Classy(Stateful, {
 	suits: ["diamonds", "spades", "hearts", "clubs"],
@@ -605,20 +635,20 @@ Card = Classy(Stateful, {
 	
 	all: [], // all cards, by id. shared
 	
-	x: 0,
-	y: 0,
+	x: NaN,
+	y: NaN,
 	z: 0,
+	oldX: NaN,
+	oldY: NaN,
+	oldZ: NaN,
+	stateX: 0,
+	stateY: 0,
+
 	suit: 0,
 	rank: 0,
 	width: 73,
 	height: 97,
 	title: "",
-	stateX: 0,
-	stateY: 0,
-	renderedZ: NaN,
-	oldX: 0,
-	oldY: 0,
-	oldZ: 0,
 
 	user: null, // wave user last to touch it
 	userClass: "", // css class representing the user
@@ -656,10 +686,12 @@ Card = Classy(Stateful, {
 		}
 	},
 	
-	constructor: function (id) {
+	constructor: function () {
 		Stateful.apply(this, arguments);
 		
-		this.all[id] = this;
+		highestId = Math.max(highestId, this.id);
+		
+		this.all[this.id] = this;
 		this.overlaps = [];
 		
 		// Clone the dom elements for this instance
@@ -957,7 +989,7 @@ Card = Classy(Stateful, {
 					
 						// This would mean raising a card above itself,
 						// which is not possible. Abort!
-						//if (window.console) console.log('knot');
+						//console.log('knot');
 						return false;
 					} else {
 						
@@ -996,7 +1028,7 @@ Card = Classy(Stateful, {
 		return true;
 	},
 		
-	/* -------------- Card View functions -------------- */
+	/* ---------------------------- Card View functions ---------------------------- */
 	
 	// Set the card's classes and title to its suit and rank.
 	renderFace: function () {
@@ -1090,7 +1122,7 @@ Card = Classy(Stateful, {
 		this.x = ~~this.stateX;
 		this.y = ~~this.stateY;
 		
-		if (transition && !isNaN(this.x)) {
+		if (transition && !isNaN(oldX)) {
 			var $this = this;
 			this.movingNow = true;
 			this.renderHighlight();
@@ -1115,20 +1147,20 @@ Card = Classy(Stateful, {
 	
 	// set the z-index of the element to the z of the object.
 	renderZ: function () {
-		if (this.z === this.renderedZ) {
+		if (this.z === this.oldZ) {
 			return false;
 		}
 		
 		if (this.z > 100000) {
 			// problem: the z-index shouldn't get this high in the first place.
 			this.z = 0;
-			throw new Error("z-index is too high!");
+			//throw new Error("z-index is too high!");
 		}
 		
-		ZIndexCache.remove(this, this.renderedZ);
+		ZIndexCache.remove(this, this.oldZ);
 		ZIndexCache.add(this);
 		
-		this.renderedZ = this.z;
+		this.oldZ = this.z;
 		this.dom.card.style.zIndex = this.z;
 		if (this.z > highestZ) highestZ = this.z;
 	},
@@ -1695,6 +1727,45 @@ var SelectionBox = {
 			this.dragging = false;
 			cardsContainer.removeChild(this.div);
 		}
+	}
+};
+
+
+/* ---------------------------- Player ---------------------------- */
+
+Player = Classy(Stateful, {
+	stateNames: ["firstVisit"],
+	all: {},
+	
+	participantObject: null,
+	firstVisit: true,
+
+	constructor: function () {
+		Stateful.apply(this, arguments);
+		this.all[this.id] = this;
+		this.participantObject = wave.getParticipantById(this.id);
+	},
+
+	makeState: function () {
+		return {
+			firstVisit: this.firstVisit ? "1" : "0"
+		};
+	},
+	
+	update: function (changes, newState) {
+		this.firstVisit = (newState.firstVisit == "1");
+	}
+});
+
+/* ---------------------------- Help box ---------------------------- */
+
+var HelpBox = {
+	show: function () {
+		addClass(cardsWindow, "showHelp");
+	},
+
+	hide: function () {
+		removeClass(cardsWindow, "showHelp");
 	}
 };
 

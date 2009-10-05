@@ -20,12 +20,41 @@
   
   <div id="cardsWindow">
     <div id="buttons">
+      <button id="helpBtn" title="Help">?</button>
       <button id="rotateBtn" title="Turn the table">&crarr;</button>
       <button id="addDeckBtn" title="Add a deck">+</button>
       <ul id="decks"></ul>
     </div>
     
     <div id="cards"></div>
+    
+    <div id="help">
+      <button id="closeHelpBtn" title="Close the help box">X</button>
+      
+      <h1>Cards</h1
+      <p>Welcome to the cards gadget!</p>
+      <p>Click and drag cards to move them around. To move several at once, select them by dragging a box around them. To add a card to the selection, shift-click it. You can tell which cards you have selected because they will have a dotted gray border.</p>
+     
+      <h2>Buttons</h2>
+      <dl>
+      <dt><button>X</button></dt><dd>Close this help box.</dd>
+      <dt><button>?</button></dt><dd>Show this help box.</dd>
+      <dt><button>&crarr;</button></dt><dd>Rotate your view of the board 180&deg;, so you can play across from another person.</dd>
+      <dt><button>+</button></dt><dd>Add a new deck.</dd>
+      <dt class="deckIcon"></dt><dd>Delete a deck.</dd>
+      </dl>
+     
+      <h2>Keys</h2>
+      <p>Pressing these keys will affect the cards currently selected.</p>
+      <dl>
+      <dt>F</dt><dd>Flip.</dd>
+      <dt>S</dt><dd>Shuffle.</dd>
+      <dt>U</dt><dd>Lets you to drag cards behind other cards.</dd>
+      <dt>P</dt><dd>Peek. Look at the other side of the cards without other participants seeing. You can tell when someone is peeking at a card because it will have a dotted border.</dd>
+      <dt>P+L</dt><dd>Peek lock. Press P while holding L to continuously peek at a card. This simulates you holding the cards in your hand so that no one but you can see them.</dd>
+      </dl>
+      
+    </div>
   </div>
 
   ]]></Content>
