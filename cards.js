@@ -45,6 +45,7 @@ var
 	hasFocus,              // whether the window has the user's focus
 	
 	me,                    // the participant whose client renders the gadget
+	meState,               // state object for the viewing participant
 	things = {},           // objects (cards and decks) encoded in the wave state
 	waveState,             // the wave gadget state
 	waveStateKeys = [],    // the keys of the gadget state
@@ -170,11 +171,9 @@ function onEverythingLoad() {
 	}
 	
 	// If it is the viewer's first visit, show them the help screen.
-	var myState = getThing("player_" + me.getId());
-	if (myState.firstVisit) {
+	meState = getThing("player_" + me.getId());
+	if (meState.firstVisit) {
 		HelpBox.show();
-		myState.firstVisit = false;
-		myState.sendUpdate();
 	}
 }
 
@@ -1766,6 +1765,8 @@ var HelpBox = {
 
 	hide: function () {
 		removeClass(cardsWindow, "showHelp");
+		meState.firstVisit = false;
+		meState.sendUpdate();
 	}
 };
 
