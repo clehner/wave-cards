@@ -1510,13 +1510,11 @@ var CardSelection = {
 	flip: function () {
 		this.refreshBounds();
 		
-		var xx = 2 * this.x + this.width,
-		zz = this.z + this.z1;
+		var zz = this.z + this.z1;
+		// reverse the z order of the cards, don't change the x and y.
 		
 		this.cards.forEach(function (card) {
-			card.stateX = xx - (card.x + card.width);
 			card.z = zz - card.z;
-			//card.flip();
 			card.faceup = !card.faceup;
 			card.queueUpdate();
 		});
