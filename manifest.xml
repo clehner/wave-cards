@@ -1,6 +1,6 @@
 <extension 
     name="Cards"
-    description="Play card games in Wave with this gadget!"
+    description="Play card games in Wave!"
     thumbnailUrl="http://wave-cards.googlecode.com/svn/trunk/images/thumbnail-120x120.png">
   <author name="Charles Lehner"/>
   <menuHook location="toolbar" text="Insert a cards gadget." 
