@@ -863,6 +863,7 @@ Card = Classy(Stateful, {
 			
 			// if the deck is not yet loaded, wait until it is.
 			if (!this.deck.loaded) {
+				this.deck.cards.push(this);
 				var $this = this;
 				setTimeout(function () {
 					if ($this.deck.loaded) {
