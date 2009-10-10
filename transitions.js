@@ -23,8 +23,7 @@ Transition = (function () {
 				
 					var startTime = +new Date();
 					
-					var style = document.defaultView.getComputedStyle(elm);
-					// TODO: get rid of getComputedStyle because it is slow.
+					var style = elm.style; //document.defaultView.getComputedStyle(elm);
 					
 					// the value to transition the property to
 					var value = css[property];

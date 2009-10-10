@@ -56,32 +56,6 @@ The reason for having a wrapper is to separate the label from the card so that i
 	float: left;
 }
 
-/* --------- Decks --------- */
-
-#decks {
-	list-style: none;
-	display: inline;
-	padding: 0;
-	margin: 0;
-}
-
-#decks li {
-	float: left;
-	cursor: pointer;
-}
-#decks li, .deckIcon {
-	width: 16px;
-	height: 22px;
-	margin: 0 5px;
-	background: url(images/smallbluedeck.png);
-}
-#decks li.red {
-	background: url(images/smallreddeck.png);
-}
-#decks li.green {
-	background: url(images/smallgreendeck.png);
-}
-
 /* --------- Selection Box --------- */
 
 #selectionBox {
@@ -143,8 +117,7 @@ The reason for having a wrapper is to separate the label from the card so that i
 .jack  { background-position: -730px 0 }
 .queen { background-position: -803px 0 }
 .king  { background-position: -876px 0 }
-
-.joker { background: url(images/j.png) }
+.joker { background-position: -949px 0 }
 
 /* --------- Highlight --------- */
 
@@ -202,50 +175,119 @@ The reason for having a wrapper is to separate the label from the card so that i
 	outline-offset: -1px;
 }
 
-/* --------- Help box --------- */
+/* --------- Dialog box --------- */
 
-.showHelp {
-	background-color: black;
-}
-.showHelp #cards {
-	opacity: 0.75;
-	background-color: white;
-}
-.showHelp #help {
-	display: block;
-}
-
-#help {
+#dialog {
 	position: absolute;
-	display: none;
 	top: 30px;
 	bottom: 30px;
 	left: 20%;
 	right: 20%;
-	border: 1px solid black;
-	padding: .5em;
-	overflow: auto;
-	background-color: rgba(255, 255, 255, 0.9);
 	z-index: 2000000;
 	font: 14px/1.25em Arial, sans-serif;
+	background-color: rgba(255, 255, 255, 0.9);
 	-webkit-user-select: auto;
+	display: none;
 }
-#closeHelpBtn {
-	float: right;
+#dialog .dialog {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 1.8em;
+	display: none;
+	border: 1px black;
+	border-style: solid solid none;
+	overflow: auto;
+	padding: .5em;
 }
-#help h1, #help h2 {
+#dialog #close {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	height: 1.5em;
+	border: 1px black;
+	border-style: none solid solid;
+	text-align: center;
+	background-color: #eee;
+	padding: .2em;
+}
+.showDialog #dialog, #dialog .visible {
+	display: block;
+}
+.showDialog {
+	background-color: black;
+}
+.showDialog #cards {
+	opacity: 0.75;
+	background-color: white;
+}
+
+#dialog h1, #dialog h2 {
 	text-align: center;
 }
-#help h1 {
-	padding: 0 1.5em;
+#dialog h1 {
 	font-size: 1.25em;
 }
-#help h2 {
+#dialog h2 {
 	font-size: 1em;
 }
+#dialog th {
+	font-weight: normal;
+	font-size: 14px;
+}
+
+/* --------- Decks --------- */
+
+.deckIcon {
+	width: 16px;
+	height: 22px;
+	margin: 0 5px;
+	background: url(images/smallbluedeck.png) no-repeat top center;
+	display: inline-block;
+	vertical-align: top;
+}
+.deckIcon.red {
+	background-image: url(images/smallreddeck.png);
+}
+.deckIcon.green {
+	background-image: url(images/smallgreendeck.png);
+}
+
+/* --------- Help dialog --------- */
+
 #help dt {
 	font-weight: bold;
 }
 #help dd {
 	margin-top: -1.25em;
+}
+#help dl.wide dd {
+	margin-left: 4em;
+}
+
+
+/* --------- Decks dialog --------- */
+
+hr {
+	border-style: none;
+	border-bottom: 1px solid #999;
+	margin: 0;
+	height: 0;
+}
+
+#decks h2 {
+	text-align: inherit;
+}
+
+#decksList {
+	padding-left: 1.75em;
+}
+#decksList li {
+	padding: 3px 3px 3px 0;
+	margin: -3px -3px -3px 0;
+}
+#decksList li:hover {
+	background-color: rgba(0, 0, 0, 0.05);
 }

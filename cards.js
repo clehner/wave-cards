@@ -31,7 +31,8 @@ THE SOFTWARE.
 var
 	cardsContainer,        // #cards
 	cardsWindow,           // #cardsWindow
-	decksContainer,        // #decks
+	decksList,           // #decksList
+	
 	rotation = 0,          // angle the card container is rotated.
 	
 	transitionDuration = 250, // length (ms) of a transition/animation
@@ -71,7 +72,7 @@ function gadgetLoad() {
 	// Get DOM references
 	cardsContainer = document.getElementById("cards");
 	cardsWindow = document.getElementById("cardsWindow");
-	decksContainer = document.getElementById("decks");
+	decksList = document.getElementById("decksList");
 	
 	// Wait for everything to be available
 	if (!cardsContainer) {
@@ -83,14 +84,18 @@ function gadgetLoad() {
 	addEventListener("keyup", onKeyUp, false);
 	addEventListener("blur", onBlur, false);
 	addEventListener("focus", onFocus, false);
-	cardsContainer.addEventListener("mousedown", onMouseDown, false);
+	cardsContainer.addEventListener(
+		"mousedown", onMouseDown, false);
 	
-	document.getElementById("helpBtn").addEventListener("click", HelpBox.show, false);
-	document.getElementById("rotateBtn").addEventListener("click", rotateTable, false);
-	document.getElementById("addDeckBtn").addEventListener("click", addDeck, false);
+	// initialize dialog boxes
+	dialogBox = new DialogBox();
 	
-	document.getElementById("closeHelpBtn").addEventListener(
-		"click", HelpBox.hide, false);
+	document.getElementById("helpBtn").addEventListener(
+		"click", dialogBox.openHelp, false);
+	document.getElementById("rotateBtn").addEventListener(
+		"click", rotateTable, false);
+	document.getElementById("decksBtn").addEventListener(
+		"click", dialogBox.openDecks, false);
 	
 	// Set up wave callbacks
 	if (wave && wave.isInWaveContainer()) {
@@ -155,25 +160,26 @@ function participantsUpdated() {
 	
 	if (!participantsLoaded && me) {
 		participantsLoaded = true;
-		stateUpdated();
 		if (stateLoaded) {
 			onEverythingLoad();
+		} else {
+			stateUpdated();
 		}
 	}
 }
 
 // called after the first state and participants updates have been received.
 function onEverythingLoad() {
-		
-	// If the gadget state is empty and there are no cards, create a deck.
-	if (waveStateKeys.length == 0) {
-		addDeck();
-	}
-	
-	// If it is the viewer's first visit, show them the help screen.
+	// If this is the viewer's first visit, show them the help screen.
 	meState = getThing("player_" + me.getId());
 	if (meState.firstVisit) {
-		HelpBox.show();
+		dialogBox.openHelp();
+		
+		// If the gadget state is empty (there are no cards), create a deck.
+		if (waveStateKeys.length == 0) {
+			// blue, no jokers, and shuffled
+			addDeck(0, 0, true);
+		}
 	}
 }
 
@@ -321,25 +327,76 @@ function onBlur() {
 }
 
 // create a deck of cards
-function addDeck() {
-	var newDeck, cards, card, i, s, r;
+function addDeck(colorId, numJokers, shuffled) {
+	var newDeck, deckShift, cards, card, positions, pos, types, type, i, l, s, r, xy;
+	
 	
 	newDeck = getThing("deck_"+(++highestId));
-	cards = newDeck.cards;
+	
+	deckNum = Deck.prototype.totalDecks - 1;
+	xShift = 100 * (deckNum % 5);
+	yShift = 120 * ~~(deckNum / 5);
+	
+	newDeck.colorId = colorId;
+	newDeck.jokers = numJokers;
+	
+	cards = Array(52);
+	types = Array(52);
+	positions = Array(52);
 	i = 0;
 	
 	for (s = 0; s < 4; s++) {
 		for (r = 0; r < 13; r++) {
-			with(cards[i++] = getThing("card_"+(++highestId))) {
-				suit = s;
-				rank = r;
-				stateX = stateY = 30 + ~~(i/3);
-				z = ++highestZ;
-				deck = newDeck;
-				queueUpdate();
-			}
+			types[i++] = {
+				id: ++highestId,
+				suit: s,
+				rank: r
+			};
 		}
 	}
+			
+	// Add jokers.
+	while (numJokers--) {
+		types[i++] = {
+			id: ++highestId,
+			suit: i % 2,
+			rank: 13
+		}
+	}
+	
+	// Initialize the positions separately from the suit/rank so that the
+	// cards can be shuffled more easily.
+	for (l = i, i = 0; i < l; i++) {
+		xy = 30 + ~~(i/3);
+		positions[i] = {
+			x: xy + xShift,
+			y: xy + yShift,
+			z: ++highestZ
+		}
+	}
+	
+	// Shuffle the deck if necessary.
+	if (shuffled) {
+		shuffle(positions);
+	}
+	
+	// Update the cards with their info.
+	while (i--) {
+		type = types[i];
+		pos = positions[i];
+		card = cards[i] = getThing("card_" + type.id);
+		
+		card.deck = newDeck;
+		card.suit = type.suit;
+		card.rank = type.rank;
+		card.stateX = pos.x;
+		card.stateY = pos.y;
+		card.z = pos.z;
+		
+		card.queueUpdate();
+	}
+	
+	newDeck.cards = cards;
 	newDeck.sendUpdate();
 }
 
@@ -398,6 +455,21 @@ function removeClass(ele, cls) {
 function toggleClass(ele, cls, yes) {
 	if (yes) addClass(ele, cls);
 	else removeClass(ele, cls);
+}
+
+// Randomly shuffle the elements of an array.
+// source: http://stackoverflow.com/questions/962802#962890
+function shuffle(array) {
+	var tmp, current, top = array.length;
+
+	if (top) while (--top) {
+		current = Math.floor(Math.random() * (top + 1));
+		tmp = array[current];
+		array[current] = array[top];
+		array[top] = tmp;
+	}
+
+	return array;
 }
 
 /* ---------------------------- Stateful ---------------------------- */
@@ -518,42 +590,52 @@ Stateful = Classy({
 /* ---------------------------- Deck ---------------------------- */
 
 Deck = Classy(Stateful, {
-	stateNames: ["color", "cards"],
+	stateNames: ["color", "cards", "jokers"],
+	totalDecks: 0,
 	
 	colors: ["blue", "red", "green"],
 	color: "",
 	colorId: 0,
-	decksByColor: [],
 	cards: [],
+	jokers: 0,
+	
+	row: null,
 	icon: null,
+	jokersText: null,
 
 	constructor: function () {
 		Stateful.apply(this, arguments);
-		this.cards = [];
 		
 		highestId = Math.max(highestId, this.id);
+		Deck.prototype.totalDecks++;
 		
-		this.icon = document.createElement("li");
+		this.cards = [];
 		
-		// use first unused color id
-		for (var i = 0; this.decksByColor[i]; i++) {}
-		this.colorId = i;
-		this.renderColor();
+		this.icon = document.createElement("span");
+		this.icon.className = "deckIcon";
 		
-		var $this = this;
-		this.icon.onclick = function () {
-			if (confirm("Delete this deck?")) {
-				$this.markForRemoval();
-				$this.sendUpdate();
-			}
-		};
+		this.jokersText = document.createTextNode("");
 		
-		decksContainer.appendChild(this.icon);
+		var removeBtn = document.createElement("button");
+		removeBtn.innerHTML = "Remove";
+		removeBtn.object = this;
+		removeBtn.onclick = this.clickRemove;
+		
+		var row = this.row = document.createElement("li");
+		row.appendChild(this.icon);
+		row.appendChild(this.jokersText);
+		row.appendChild(removeBtn);
+		row.object = this;
+		row.onmouseover = this.highlightCards;
+		row.onmouseout = this.highlightCards;
+		
+		decksList.appendChild(row);
 	},
 
 	makeState: function () {
 		return {
 			color: this.colorId,
+			jokers: this.jokers,
 			cards: this.cards.map(function (item) {
 				return item.id;
 			}).join(";")
@@ -565,21 +647,24 @@ Deck = Classy(Stateful, {
 			card.markForRemoval();
 			card.queueUpdate();
 		});
-		//this.remove();
 		Stateful.prototype.markForRemoval.call(this);
 	},
 	
 	remove: function () {
 		if (this.removed) return;
 		Stateful.prototype.remove.call(this);
-		
+
 		delete this.cards;
-		delete this.decksByColor[this.colorId];
 		
-		decksContainer.removeChild(this.icon);
+		decksList.removeChild(this.row);
 	},
 	
 	update: function (changes, newState) {
+		if (changes.jokers) {
+			this.jokers = ~~newState.jokers;
+			this.jokersText.nodeValue = "(" + this.jokers + " jokers) ";
+		}
+	
 		if (changes.cards) {
 			var cardIds = newState.cards.split(";");
 			var len = cardIds.length;
@@ -590,17 +675,33 @@ Deck = Classy(Stateful, {
 		}
 		
 		if (changes.color) {
-			delete this.decksByColor[this.colorId];
 			this.colorId = ~~newState.color;
 			this.renderColor();
 		}
 	},
 	
 	renderColor: function () {
-		this.decksByColor[this.colorId] = this;
+		removeClass(this.icon, this.color);
 		this.color = this.colors[this.colorId % 3];
-		this.icon.className = this.color;
-		this.icon.title = "Delete the " + this.color + " deck";
+		addClass(this.icon, this.color);
+	},
+	
+	// on clicking the remove button, confirm removal
+	clickRemove: function (e) {
+		var $this = this.object;
+		if (confirm("Delete this deck from the table?")) {
+			$this.markForRemoval();
+			$this.sendUpdate();
+		}
+	},
+	
+	// invert the selection of all the cards in the deck.
+	highlightCards: function (e) {
+		var $this = this.object;
+		$this.cards.forEach(function (card) {
+			card.selected ^= 1;
+			card.renderSelected();
+		});
 	},
 });
 
@@ -610,7 +711,7 @@ Deck = Classy(Stateful, {
 
 Card = Classy(Stateful, {
 	suits: ["diamonds", "spades", "hearts", "clubs"],
-	ranks: ["ace", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "jack", "queen", "king"],//, "joker"],
+	ranks: ["ace", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "jack", "queen", "king", "joker"],
 
 	dom: (function () {
 		var wrapper, label, card, front, back;
@@ -693,7 +794,7 @@ Card = Classy(Stateful, {
 		this.all[this.id] = this;
 		this.overlaps = [];
 		
-		// Clone the dom elements for this instance
+		// Clone the dom elements from the prototype into this instance
 		var wrapper, card;
 		this.dom = {
 			wrapper: (wrapper = this.dom.wrapper.cloneNode(1)),
@@ -1031,17 +1132,31 @@ Card = Classy(Stateful, {
 	
 	// Set the card's classes and title to its suit and rank.
 	renderFace: function () {
-		// to do: change this so that it doesn't overwrite other classNames.
 		var rank = this.ranks[this.rank];
 		var suit = this.suits[this.suit];
+		
+		if (rank == "joker") {
+			// Joker can be rendered only in spades or diamonds
+			this.suit %= 2;
+			suit = this.suits[this.suit];
+			
+			// because it has no suit, only color.
+			var color = (this.suit == 0) ? "black" : "red";
+			this.title = color + " joker";
+			
+		} else {
+			this.title = rank + " of " + suit;
+		}
+		this.dom.front.setAttribute("title", this.title);
+
 		addClass(this.dom.front, rank);
 		addClass(this.dom.front, suit);
-		this.title = rank + " of " + suit;
-		this.dom.front.setAttribute("title", this.title);
+		
 	},
 	
 	renderUserLabel: function () {
-		var playerNum = players.indexOf(this.user)+1;
+		var playerNum = players.indexOf(this.user);
+		if (playerNum == -1) playerNum = 0;
 		
 		// replace old class with new one
 		if (this.userClass) {
@@ -1198,7 +1313,8 @@ Card = Classy(Stateful, {
 			*/
 			
 			if (window.WebKitCSSMatrix) {
-				this.dom[faceup ? "back" : "front"].style[cssTransform] = "rotateY(180deg)"
+				this.dom[faceup ? "back" : "front"].style[cssTransform] =
+					"rotateY(180deg)";
 				
 				// rotate to 0 from 180 or -180
 				a = faceup ? -1 : 1;
@@ -1209,7 +1325,8 @@ Card = Classy(Stateful, {
 				halfWay = 3; // 3 not 2 because of the easing function i think
 			} else {
 				// 
-				this.dom[faceup ? "back" : "front"].style[cssTransform] = "matrix(-1, 0, 0, 1, 0, 0)";
+				this.dom[faceup ? "back" : "front"].style[cssTransform] =
+					"matrix(-1, 0, 0, 1, 0, 0)";
 				
 				// flip from -1 to 1, reverse to front
 				rotater = function (n) {
@@ -1220,25 +1337,29 @@ Card = Classy(Stateful, {
 			}
 			this.dom.card.style[cssTransform] = rotater(0);
 			
-			t = {};
-			t[cssTransform] = rotater;
-			Transition(this.dom.card, t, transitionDuration, function () {
-				$this.dom.card.style[cssTransform] = "";
-				$this.dom.front.style[cssTransform] = "";
-				$this.dom.back.style[cssTransform] = "";
-				$this.flipping = false;
-				$this.renderHighlight();
-				$this.removeFlipClass();
-			});
+			// the transition needs a delay before it can be applied, for some reason.
 			setTimeout(function () {
-				$this.flipClasses();
-			}, transitionDuration / halfWay);
+				t = {};
+				t[cssTransform] = rotater;
+				Transition($this.dom.card, t, transitionDuration, function () {
+					$this.dom.card.style[cssTransform] = "";
+					$this.dom.front.style[cssTransform] = "";
+					$this.dom.back.style[cssTransform] = "";
+					$this.flipping = false;
+					$this.renderHighlight();
+					$this.removeFlipClass();
+				});
+				setTimeout(function () {
+					$this.flipClasses();
+				}, transitionDuration / halfWay);
+			}, 0);
 			
 		} else {
 			// no transforms; use opacity.
 			this.dom.back.style.opacity = ~~faceup;
 			this.removeFlipClass();
-			Transition(this.dom.back, {opacity: ~~!this.faceup}, transitionDuration, function () {
+			Transition(this.dom.back, {opacity: ~~!this.faceup},
+				transitionDuration, function () {
 				$this.flipClasses();
 				$this.flipping = false;
 				$this.renderHighlight();
@@ -1254,20 +1375,6 @@ Card = Classy(Stateful, {
 		addClass(this.dom.card, this.deckClass);
 	}
 });
-
-// source: http://stackoverflow.com/questions/962802#962890
-function shuffle(array) {
-	var tmp, current, top = array.length;
-
-	if(top) while(--top) {
-		current = Math.floor(Math.random() * (top + 1));
-		tmp = array[current];
-		array[current] = array[top];
-		array[top] = tmp;
-	}
-
-	return array;
-}
 
 // Cards Selection
 var CardSelection = {
@@ -1389,7 +1496,8 @@ var CardSelection = {
 	},
 	
 	drag: function (x, y) {
-		var cards, overlapper, i, oldOverlappees, overlappers, overlappee, oldOverlappee;
+		var cards, overlapper, i, oldOverlappees, overlappers,
+			overlappee, oldOverlappee;
 		
 		// update the position of each card
 		cards = this.cards;
@@ -1548,7 +1656,7 @@ var CardSelection = {
 };
 
 var ZIndexCache = {
-	buckets: [],      // array of "buckets" of each card with a particular z value
+	buckets: [],      // array of buckets of each card, by z value
 	aboveCache: {},   // cache for getAbove()
 	belowCache: {},   // cache for getBelow()
 	hasCaches: false, // are aboveCache and belowCache useful
@@ -1754,18 +1862,80 @@ Player = Classy(Stateful, {
 	}
 });
 
-/* ---------------------------- Help box ---------------------------- */
+/* ---------------------------- Dialog boxes ---------------------------- */
 
-var HelpBox = {
-	show: function () {
-		addClass(cardsWindow, "showHelp");
-	},
-
-	hide: function () {
-		removeClass(cardsWindow, "showHelp");
-		meState.firstVisit = false;
-		meState.sendUpdate();
+var DialogBox = Classy({constructor: function () {
+	// get dom references
+	var closeBtn = document.getElementById("closeDialogBtn");
+	var decks = document.getElementById("decks");
+	var help = document.getElementById("help");
+	
+	var visibleDialog = null;
+	
+	// Initialize decks dialog.
+	document.getElementById("deckColor").onchange = function () {
+		document.getElementById("deckIcon").className = "deckIcon " +
+			Deck.prototype.colors[this.value];
 	}
-};
+	
+	document.getElementById("addDeckBtn").onclick = function () {
+		var color = document.getElementById("deckColor").value;
+		var jokers = document.getElementById("deckJokers").value;
+		var shuffled = document.getElementById("deckShuffled").value;
+		
+		addDeck(color, jokers, shuffled);
+	}
+	
+	// open a dialog
+	var open = function (dialog, btnText) {
+		// make sure dialog is not already open
+		if (dialog == visibleDialog) {
+			return;
+		}
+		
+		// hide previous dialog
+		close();
+		
+		// change button text
+		closeBtn.innerHTML = btnText;
+		
+		// show new dialog
+		visibleDialog = dialog;
+		addClass(dialog, "visible");
+		
+		addClass(cardsWindow, "showDialog");
+	};
+	
+	// close the open dialog
+	var close = function () {
+		if (visibleDialog) {
+			removeClass(visibleDialog, "visible");
+			visibleDialog = null;
+
+			removeClass(cardsWindow, "showDialog");
+			
+			if (meState.firstVisit) {
+				meState.firstVisit = false;
+				meState.sendUpdate();
+			}
+		}
+	};
+	
+	// initialize close 
+	closeBtn.addEventListener("click", close, false);
+		
+	// Instance methods:
+		
+	// open the help dialog
+	this.openHelp = function () {
+		open(help, "OK");
+	};
+		
+	// open the decks dialog
+	this.openDecks = function () {
+		open(decks, "Done");
+	};
+	
+}});
 
 })();
