@@ -1,61 +1,89 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Module>
-  <ModulePrefs
-    title="Cards"
-    height="480"
-    description="Play card games in Google Wave."
-    author="Charles Lehner"
-    author_email="celehner1@gmail.com">
-   <Require feature="wave"/>
-  </ModulePrefs>
+	<ModulePrefs
+		title="Cards"
+		height="480"
+		description="Play card games in Google Wave."
+		author="Charles Lehner"
+		author_email="celehner1@gmail.com">
+	 <Require feature="wave"/>
+	</ModulePrefs>
 
-  <Content type="html">
-  <![CDATA[
-  
-  <script type="text/javascript" src="http://wave-api.appspot.com/public/wave.js"></script>
-  <script type="text/javascript" src="http://wave-cards.googlecode.com/svn/trunk/classy.js"></script>
-  <script type="text/javascript" src="http://wave-cards.googlecode.com/svn/trunk/transitions.js"></script>
-  <script type="text/javascript" src="http://wave-cards.googlecode.com/svn/trunk/cards.js"></script>
-  <link rel="stylesheet" href="http://wave-cards.googlecode.com/svn/trunk/cards.css" type="text/css">
-  
-  <div id="cardsWindow">
-    <div id="buttons">
-      <button id="helpBtn" title="Help">?</button>
-      <button id="rotateBtn" title="Turn the table">&crarr;</button>
-      <button id="addDeckBtn" title="Add a deck">+</button>
-      <ul id="decks"></ul>
-    </div>
-    
-    <div id="cards"></div>
-    
-    <div id="help">
-      <button id="closeHelpBtn" title="Close the help box">X</button>
-      
-      <h1>Cards</h1
-      <p>Welcome to the cards gadget!</p>
-      <p>Click and drag cards to move them around. To move several at once, select them by dragging a box around them. To add a card to the selection, shift-click it. You can tell which cards you have selected because they will have a dotted gray border.</p>
-     
-      <h2>Buttons</h2>
-      <dl>
-      <dt><button>X</button></dt><dd>Close this help box.</dd>
-      <dt><button>?</button></dt><dd>Show this help box.</dd>
-      <dt><button>&crarr;</button></dt><dd>Rotate your view of the board 180&deg;, so you can play across from another person.</dd>
-      <dt><button>+</button></dt><dd>Add a new deck.</dd>
-      <dt class="deckIcon"></dt><dd>Delete a deck.</dd>
-      </dl>
-     
-      <h2>Keys</h2>
-      <p>Pressing these keys will affect the cards currently selected.</p>
-      <dl>
-      <dt>F</dt><dd>Flip.</dd>
-      <dt>S</dt><dd>Shuffle.</dd>
-      <dt>U</dt><dd>Lets you to drag cards behind other cards.</dd>
-      <dt>P</dt><dd>Peek. Look at the other side of the cards without other participants seeing. You can tell when someone is peeking at a card because it will have a dotted border.</dd>
-      <dt>P+L</dt><dd>Peek lock. Press P while holding L to continuously peek at a card. This simulates you holding the cards in your hand so that no one but you can see them.</dd>
-      </dl>
-      
-    </div>
-  </div>
+	<Content type="html">
+	<![CDATA[
+	
+	<script type="text/javascript" src="http://wave-api.appspot.com/public/wave.js"></script>
+	<script type="text/javascript" src="http://wave-cards.googlecode.com/svn/trunk/classy.js"></script>
+	<script type="text/javascript" src="http://wave-cards.googlecode.com/svn/trunk/transitions.js"></script>
+	<script type="text/javascript" src="http://wave-cards.googlecode.com/svn/trunk/cards.js"></script>
+	<link rel="stylesheet" href="http://wave-cards.googlecode.com/svn/trunk/cards.css" type="text/css">
+	
+	<div id="cardsWindow">
+		<div id="buttons">
+			<button id="helpBtn" title="Help">?</button>
+			<button id="rotateBtn" title="Turn the table">&crarr;</button>
+			<button id="decksBtn" title="Add or remove decks">Decks</button>
+		</div>
+		
+		<div id="cards"></div>
+		
+		<div id="dialog">
+			<div id="close">
+				<button id="closeDialogBtn" title="Close this message box.">OK</button>
+			</div>
+			
+			<div id="help" class="dialog">
+				<h1>Cards</h1>
+				<p>Welcome to the cards gadget!</p>
+				<p>Click and drag cards to move them around. To move several at once, select them by dragging a box around them. To add a card to the selection, shift-click it. You can tell which cards you have selected because they will have a dotted gray border.</p>
+			 
+				<h2>Keys</h2>
+				<p>Pressing these keys will affect the cards currently selected.</p>
+				<dl>
+				<dt>F</dt><dd>Flip.</dd>
+				<dt>U</dt><dd>Lets you to drag cards behind other cards.</dd>
+				<dt>S</dt><dd>Shuffle.</dd>
+				<dt>P</dt><dd>Peek. Look at the other side of the cards without other participants seeing. You can tell when someone is peeking at a card because it will have a dotted border.</dd>
+				<dt>P+L</dt><dd>Peek lock. Press P while holding L to continuously peek at a card. This simulates you holding the cards in your hand so that no one but you can see them.</dd>
+				</dl>
+			 
+				<h2>Buttons</h2>
+				<dl class="wide">
+				<dt><button>?</button></dt>
+				<dd>Show this help box.</dd>
+				<dt><button>&crarr;</button></dt>
+				<dd>Rotate your view of the board 180&deg;, so you can play across from another person.</dd>
+				<dt><button>Decks</button></dt>
+				<dd>Add or remove decks from the table. You can choose to add a deck with or without jokers, and shuffled or unshuffled.</dd>
+				</dl>
+			</div>
+			
+			<div id="decks" class="dialog">
+				<h2>Decks currently on the table:</h2>
+				<ol id="decksList"></ol>
+				<hr />
+				<h2>Add a new deck:</h2>
+				<p>
+					<span id="deckIcon" class="deckIcon"></span>
+					<select id="deckColor">
+						<option value="0">blue</option>
+						<option value="1">red</option>
+						<option value="2">green</option>
+					</select>
+					<select id="deckJokers">
+						<option value="0" selected="selected">0 jokers</option>
+						<option value="2">2 jokers</option>
+						<option value="4">4 jokers</option>
+					</select>
+					<select id="deckShuffled">
+						<option value="">unshuffled</option>
+						<option value="1" selected="selected">shuffled</option>
+					</select>
+					<button id="addDeckBtn">Add deck</button>
+				</p>
+			</div>
+		</div>
+	</div>
 
-  ]]></Content>
+	]]></Content>
 </Module>
