@@ -177,8 +177,8 @@ function onEverythingLoad() {
 		
 		// If the gadget state is empty (there are no cards), create a deck.
 		if (waveStateKeys.length == 0) {
-			// blue, no jokers, and shuffled
-			addDeck(0, 0, true);
+			// blue, 2 jokers, and shuffled
+			addDeck(0, 2, true);
 		}
 	}
 }
