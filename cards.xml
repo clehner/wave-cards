@@ -15,8 +15,8 @@
 	<script type="text/javascript" src="http://wave-api.appspot.com/public/wave.js"></script>
 	<script type="text/javascript" src="http://wave-cards.googlecode.com/svn/trunk/classy.js"></script>
 	<script type="text/javascript" src="http://wave-cards.googlecode.com/svn/trunk/transitions.js?1"></script>
-	<script type="text/javascript" src="http://wave-cards.googlecode.com/svn/trunk/cards.js?1"></script>
-	<link rel="stylesheet" href="http://wave-cards.googlecode.com/svn/trunk/cards.css?1" type="text/css">
+	<script type="text/javascript" src="http://wave-cards.googlecode.com/svn/trunk/cards.js?2"></script>
+	<link rel="stylesheet" href="http://wave-cards.googlecode.com/svn/trunk/cards.css?2" type="text/css">
 	
 	<div id="cardsWindow">
 		<div id="buttons">
@@ -29,7 +29,8 @@
 		
 		<div id="dialog">
 			<div id="close">
-				<button id="closeDialogBtn" title="Close this message box.">OK</button>
+			    <span id="dialogTitle"></span>
+				<button id="closeDialogBtn" title="Close this message box">X</button>
 			</div>
 			
 			<div id="help" class="dialog">
