@@ -14,9 +14,9 @@
 	
 	<script type="text/javascript" src="http://wave-api.appspot.com/public/wave.js"></script>
 	<script type="text/javascript" src="http://wave-cards.googlecode.com/svn/trunk/classy.js"></script>
-	<script type="text/javascript" src="http://wave-cards.googlecode.com/svn/trunk/transitions.js"></script>
-	<script type="text/javascript" src="http://wave-cards.googlecode.com/svn/trunk/cards.js"></script>
-	<link rel="stylesheet" href="http://wave-cards.googlecode.com/svn/trunk/cards.css" type="text/css">
+	<script type="text/javascript" src="http://wave-cards.googlecode.com/svn/trunk/transitions.js?1"></script>
+	<script type="text/javascript" src="http://wave-cards.googlecode.com/svn/trunk/cards.js?1"></script>
+	<link rel="stylesheet" href="http://wave-cards.googlecode.com/svn/trunk/cards.css?1" type="text/css">
 	
 	<div id="cardsWindow">
 		<div id="buttons">
