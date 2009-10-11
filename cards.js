@@ -1866,14 +1866,49 @@ Player = Classy(Stateful, {
 /* ---------------------------- Dialog boxes ---------------------------- */
 
 var DialogBox = Classy({constructor: function () {
-	// get dom references
-	var closeBtn = document.getElementById("closeDialogBtn");
-	var decks = document.getElementById("decks");
-	var help = document.getElementById("help");
-	
 	var visibleDialog = null;
 	
-	// Initialize decks dialog.
+	// open a dialog
+	var open = function (dialog, title) {
+		// make sure dialog is not already open
+		if (dialog == visibleDialog) {
+			return;
+		}
+		
+		// set title
+		document.getElementById("dialogTitle").innerHTML = title;
+		
+		// hide previous dialog
+		close();
+		
+		// show new dialog
+		visibleDialog = dialog;
+		addClass(dialog, "visible");
+		
+		addClass(cardsWindow, "showDialog");
+	};
+	
+	// close the open dialog
+	var close = function () {
+		if (!visibleDialog) {
+			return false;
+		}
+		
+		removeClass(visibleDialog, "visible");
+		visibleDialog = null;
+
+		removeClass(cardsWindow, "showDialog");
+		
+		if (meState.firstVisit) {
+			meState.firstVisit = false;
+			meState.sendUpdate();
+		}
+	};
+	
+	// initialize close 
+	document.getElementById("closeDialogBtn").addEventListener("click", close, false);
+		
+	// Initialize decks dialog
 	document.getElementById("deckColor").onchange = function () {
 		document.getElementById("deckIcon").className = "deckIcon " +
 			Deck.prototype.colors[this.value];
@@ -1887,54 +1922,16 @@ var DialogBox = Classy({constructor: function () {
 		addDeck(color, jokers, shuffled);
 	}
 	
-	// open a dialog
-	var open = function (dialog, btnText) {
-		// make sure dialog is not already open
-		if (dialog == visibleDialog) {
-			return;
-		}
-		
-		// hide previous dialog
-		close();
-		
-		// change button text
-		closeBtn.innerHTML = btnText;
-		
-		// show new dialog
-		visibleDialog = dialog;
-		addClass(dialog, "visible");
-		
-		addClass(cardsWindow, "showDialog");
-	};
-	
-	// close the open dialog
-	var close = function () {
-		if (visibleDialog) {
-			removeClass(visibleDialog, "visible");
-			visibleDialog = null;
-
-			removeClass(cardsWindow, "showDialog");
-			
-			if (meState.firstVisit) {
-				meState.firstVisit = false;
-				meState.sendUpdate();
-			}
-		}
-	};
-	
-	// initialize close 
-	closeBtn.addEventListener("click", close, false);
-		
 	// Instance methods:
 		
 	// open the help dialog
 	this.openHelp = function () {
-		open(help, "OK");
+		open(document.getElementById("help"), "Instructions");
 	};
 		
 	// open the decks dialog
 	this.openDecks = function () {
-		open(decks, "Done");
+		open(document.getElementById("decks"), "Decks");
 	};
 	
 }});
