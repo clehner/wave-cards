@@ -38,7 +38,6 @@ var
 	transitionDuration = 250, // length (ms) of a transition/animation
 	stackDensity = 3,        // cards per pixel in a stack
 
-	peekLockMode = false,    // to allow cards to be peeked at indefinitely
 	dragUnderMode = false,   // to slide cards over or above other cards
 	drag,                    // object being currently dragged
 	players = [],            // wave participants
@@ -276,7 +275,7 @@ function onKeyDown(e) {
 		case 83:
 			CardSelection.shuffle();
 		break;
-		// G - group
+		// G - Group cards into a single stack.
 		case 71:
 			CardSelection.stack();
 		break;
@@ -284,14 +283,9 @@ function onKeyDown(e) {
 		case 70:
 			CardSelection.flip();
 		break;
-		// P - peek start
+		// P - peek
 		case 80:
-			CardSelection.peekStart();
-		break;
-		// L - peek lock on
-		case 76:
-			peekLockMode = true;
-			CardSelection.peekLock();
+			CardSelection.peek();
 	}
 }
 
@@ -304,14 +298,6 @@ function onKeyUp(e) {
 		case 85:
 			dragUnderMode = false;
 			CardSelection.detectOverlaps();
-		break;
-		// P - peek stop
-		case 80:
-			CardSelection.peekStop();
-		break;
-		// L - peek lock off
-		case 76:
-			peekLockMode = false;
 	}
 }
 
@@ -751,23 +737,22 @@ Card = Classy(Stateful, {
 	height: 97,
 	title: "",
 
-	user: null, // wave user last to touch it
-	userClass: "", // css class representing the user
-	deck: null, // the deck this card is apart of 
-	deckClass: "", // css class for the deck color
-	moving: false, // a wave user is holding or dragging the card
+	user: null,       // wave user last to touch it
+	userClass: "",    // css class representing the user
+	deck: null,       // the deck this card is apart of 
+	deckClass: "",    // css class for the deck color
+	moving: false,    // a wave user is holding or dragging the card
 	movingNow: false, // animating a move. not necessarily being held
-	selected: false, // is in the selection
-	dragging: false, // is being dragged by the mouse
-	faceup: false, // which side is up
-	flipping: false, // animating a flip
-	peeking: false, // we are peeking at the card
-	peeked: false, // someone else is peeking at the card
-	peekLock: false, // we are staying peeking at the card
+	selected: false,  // is in the selection
+	dragging: false,  // is being dragged by the mouse
+	faceup: false,    // which side is up
+	flipping: false,  // animating a flip
+	peeking: false,   // we are peeking at the card
+	peeked: false,    // someone else is peeking at the card
 	
 	overlaps: {}, // other movables that are overlapping this one.
 	
-	stateNames: ["deck", "suit", "rank", "flip", "peeked", "moving",
+	stateNames: ["deck", "suit", "rank", "flip", "peek", "moving",
 		"x", "y", "z", "user"],
 	
 	makeState: function () {
@@ -781,8 +766,8 @@ Card = Classy(Stateful, {
 				z: ~~z,
 				flip: faceup ? "f" : "",
 				moving: moving ? "m" : "",
-				peeked: peeking ? "p" : "",
-				user: me ? me.getId() : null
+				peek: peeking ? "p" : "",
+				user: me ? me.getId() : ""
 			};
 		}
 	},
@@ -892,7 +877,7 @@ Card = Classy(Stateful, {
 		}
 		
 		if (changes.moving) {
-			// someone is holding or dragging the card
+			// someone who is holding or dragging the card
 			this.moving = (newState.moving=="m");
 			this.renderHighlight();
 		}
@@ -907,51 +892,28 @@ Card = Classy(Stateful, {
 			// Flip the card
 			this.faceup = !!newState.flip;
 			this.renderFlip();
-			
-		} else if (changes.peeked) {
-			// a user is peeking at the card.
-			this.peeked = newState.peeked;
-			if (this.peeking && this.user != me) {
-				// we were peeking at the card but now someone else has taken it,
-				// so now we have to stop peeking at it.
-				this.peeking = false;
-			}
+		}
+		
+		if (changes.peek || (changes.user && this.peeked)) {
+			// A user is peeking at the card.
+			// If the card remains peeked but its owner changes, we need
+			// to recalculate who it is that is peeking.
+			this.peeked = !!newState.peek;
+			this.peeking = this.peeked && this.isMine();
 			this.renderPeek();
-			this.renderHighlight();
 		}
 	},
 	
-	flip: function (queue) {
+	// Flip this card.
+	flip: function () {
 		this.faceup = !this.faceup;
 		this.asyncUpdate();
 	},
 	
-	peekStart: function () {
-		with(this) {
-			if (!peeking) {
-				peeking = true;
-				if (peekLockMode) {
-					this.peekLock = true;
-				}
-				renderPeek();
-				asyncUpdate();
-			}
-		}
-	},
-	
-	peekStop: function () {
-		// delay so that other clients have time to notice the peek
-		var $this = this;
-		setTimeout(function () {
-			// if this card's peek lock is on, then we stay peeking at it.
-			if (!$this.peekLock) {
-				$this.peeking = false;
-				$this.peeked = false;
-				$this.renderPeek();
-				$this.renderHighlight();
-				$this.asyncUpdate();
-			}
-		}, transitionDuration);
+	// Peek this card.
+	peek: function () {
+		this.peeking = !this.peeking;
+		this.asyncUpdate();
 	},
 	
 	// return whether an object is overlapping another.
@@ -965,7 +927,7 @@ Card = Classy(Stateful, {
 			(yDelta < this.height) && (-yDelta < thing.height));
 	},
 		
-	// return id map of all cards overlapping this one.
+	// return an id-map of all cards overlapping this one.
 	getOverlappingObjects: function () {
 		var overlappingObjects = {};
 		var all = Card.prototype.all;
@@ -1005,6 +967,8 @@ Card = Classy(Stateful, {
 		this.user = me;
 		this.moving = true;
 		
+		this.renderHighlight();
+		
 		this.asyncUpdate();
 		return false;
 	},
@@ -1023,12 +987,6 @@ Card = Classy(Stateful, {
 		
 		this.moving = false;
 		
-		// when the user lets go of a card, they stop peeking at it
-		// unless in peek lock mode
-		if (this.peeking && !this.peekLock) {
-			this.peekStop();
-		}
-
 		this.asyncUpdate();
 		this.renderHighlight();
 	},
@@ -1129,6 +1087,11 @@ Card = Classy(Stateful, {
 		
 		return true;
 	},
+	
+	isMine: function () {
+		return (this.user == me) || (this.user && me &&
+			this.user.getId() === me.getId());
+	},
 		
 	/* ---------------------------- Card View functions ---------------------------- */
 	
@@ -1171,16 +1134,17 @@ Card = Classy(Stateful, {
 		if (this.user) {
 			// Set the label to the player's first name,
 			// or blank if they are the viewer.
-			var userLabel = (this.user == me) ? "" :
+			var userLabel = this.isMine() ? "" :
 				this.user.getDisplayName().match(/^[^ ]+/, '')[0];
 			this.dom.label.innerHTML = userLabel;
 		}
 	},
 
-	// If the user wants to peek at the card, show a corner of the back through the front.
+	// If the user is peeking at the card, show a corner of the back through the front.
 	renderPeek: function () {
 		toggleClass(this.dom.wrapper, "peeked", this.peeked || this.peeking);
 		toggleClass(this.dom.wrapper, "peeking", this.peeking);
+		this.renderHighlight();
 	},
 
 	// determine whether the card should have a highlight or not
@@ -1215,9 +1179,10 @@ Card = Classy(Stateful, {
 			Transition(
 				this.dom.label,
 				{opacity: 0},
-				transitionDuration*(this.user == me ? .5 : 3),
+				transitionDuration * (this.isMine() ? .5 : 3),
 				function (n) {
-					// Hide the label when the animation is done so it doesn't get in the way of other things
+					// Hide the label when the animation is done so it doesn't
+					// get in the way of other things
 					if (this.style.opacity == 0) {
 						this.style.visibility = "hidden";
 					}
@@ -1599,21 +1564,9 @@ var CardSelection = {
 		return false;
 	},
 	
-	peekStart: function () {
+	peek: function () {
 		this.cards.forEach(function (card) {
-			card.peekStart();
-		});
-	},
-	
-	peekStop: function () {
-		this.cards.forEach(function (card) {
-			card.peekStop();
-		});
-	},
-
-	peekLock: function () {
-		this.cards.forEach(function (card) {
-			card.peekLock ^= 1;
+			card.peek();
 		});
 	},
 
