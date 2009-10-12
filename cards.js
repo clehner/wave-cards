@@ -276,8 +276,8 @@ function onKeyDown(e) {
 		case 83:
 			CardSelection.shuffle();
 		break;
-		// K - Stack
-		case 75:
+		// G - group
+		case 71:
 			CardSelection.stack();
 		break;
 		// F - Flip
