@@ -29,28 +29,29 @@ THE SOFTWARE.
 (function () {
 
 var
-	cardsContainer,        // #cards
-	cardsWindow,           // #cardsWindow
-	decksList,           // #decksList
+	cardsContainer,          // #cards
+	cardsWindow,             // #cardsWindow
+	decksList,               // #decksList
 	
-	rotation = 0,          // angle the card container is rotated.
+	rotation = 0,            // angle the card container is rotated.
 	
 	transitionDuration = 250, // length (ms) of a transition/animation
+	stackDensity = 3,        // cards per pixel in a stack
 
-	peekLockMode = false,  // to allow cards to be peeked at indefinitely
-	dragUnderMode = false, // to slide cards over or above other cards
-	drag,                  // object being currently dragged
-	players = [],          // wave participants
-	highestId = 0,         // highest card id
-	highestZ = 0,          // highest z-index of a card
-	hasFocus,              // whether the window has the user's focus
+	peekLockMode = false,    // to allow cards to be peeked at indefinitely
+	dragUnderMode = false,   // to slide cards over or above other cards
+	drag,                    // object being currently dragged
+	players = [],            // wave participants
+	highestId = 0,           // highest card id
+	highestZ = 0,            // highest z-index of a card
+	hasFocus,                // whether the window has the user's focus
 	
-	me,                    // the participant whose client renders the gadget
-	meState,               // state object for the viewing participant
-	things = {},           // objects (cards and decks) encoded in the wave state
-	waveState,             // the wave gadget state
-	waveStateKeys = [],    // the keys of the gadget state
-	waveStateValues = {},  // the values of the gadget state
+	me,                      // the participant whose client renders the gadget
+	meState,                 // state object for the viewing participant
+	things = {},             // objects encoded in the wave state
+	waveState,               // the wave gadget state
+	waveStateKeys = [],      // the keys of the gadget state
+	waveStateValues = {},    // the values of the gadget state
 	gadgetLoaded = false,
 	stateLoaded = false,
 	participantsLoaded = false;
@@ -275,10 +276,10 @@ function onKeyDown(e) {
 		case 83:
 			CardSelection.shuffle();
 		break;
-		// G - Group
-		case 72:
-			// TODO
-			break;
+		// K - Stack
+		case 75:
+			CardSelection.stack();
+		break;
 		// F - Flip
 		case 70:
 			CardSelection.flip();
@@ -367,7 +368,7 @@ function addDeck(colorId, numJokers, shuffled) {
 	// Initialize the positions separately from the suit/rank so that the
 	// cards can be shuffled more easily.
 	for (l = i, i = 0; i < l; i++) {
-		xy = 30 + ~~(i/3);
+		xy = 30 + ~~(i / stackDensity);
 		positions[i] = {
 			x: xy + xShift,
 			y: xy + yShift,
@@ -1414,6 +1415,7 @@ var CardSelection = {
 	// remove a card from the selection
 	remove: function (card) {
 		this.cards.splice(this.cards.indexOf(card), 1);
+		card.selected = false;
 	},
 	
 	// compute the dimensions and coordinates of the selection as a whole
@@ -1653,6 +1655,45 @@ var CardSelection = {
 			}
 		});
 		Stateful.prototype.flushUpdates();
+	},
+
+	// stack the selected cards to one location
+	stack: function () {
+		var cards, n, x, y, i, card, shift;
+		
+		// sort the cards by z
+		cards = this.cards.sort(function (a, b) {
+			return a.z - b.z;
+		});
+		
+		n = cards.length;
+		
+		// find the average position
+		x = 0;
+		y = 0;
+		for (i = n; i--;) {
+			card = cards[i];
+			x += card.x;
+			y += card.y;
+		}
+		x /= n;
+		y /= n;
+		
+		shift = ~~((n - 1) / stackDensity / 2);
+		x -= shift;
+		y -= shift;
+		
+		// Cascade the cards diagonally, starting with the lowest card at
+		// the top left.
+		for (i = n; i--;) {
+			card = cards[i];
+			shift = ~~(i / stackDensity);
+			card.stateX = x + shift;
+			card.stateY = y + shift;
+			card.queueUpdate();
+		}
+		
+		Stateful.prototype.flushUpdates();
 	}
 };
 
@@ -1788,7 +1829,6 @@ var SelectionBox = {
 	
 	onUnOverlap: function (card) {
 		CardSelection.remove(card);
-		card.selected = false;
 		card.renderSelected();
 	},
 	

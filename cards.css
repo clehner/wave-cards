@@ -237,7 +237,7 @@ The reason for having a wrapper is to separate the label from the card so that i
 	background-color: black;
 }
 .showDialog #cards, .showDialog #buttons {
-	opacity: 0.5;
+	opacity: 0.6;
 	background-color: white;
 }
 
