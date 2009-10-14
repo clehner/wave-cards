@@ -548,17 +548,6 @@ Stateful = Classy({
 		Stateful.prototype.delta = {};
 	},
 	
-	// send the update soon
-	asyncUpdate: function (local) {
-		this.queueUpdate(local);
-		if (!Stateful.updateTimeout) {
-			Stateful.updateTimeout = setTimeout(function () {
-				Stateful.prototype.flushUpdates();
-				delete Stateful.updateTimeout;
-			}, 10);
-		}
-	},
-
 	// delete this object
 	remove: function () {
 		this.removed = true;
@@ -907,13 +896,13 @@ Card = Classy(Stateful, {
 	// Flip this card.
 	flip: function () {
 		this.faceup = !this.faceup;
-		this.asyncUpdate();
+		this.queueUpdate();
 	},
 	
 	// Peek this card.
 	peek: function () {
 		this.peeking = !this.peeking;
-		this.asyncUpdate();
+		this.queueUpdate();
 	},
 	
 	// return whether an object is overlapping another.
@@ -967,9 +956,11 @@ Card = Classy(Stateful, {
 		this.user = me;
 		this.moving = true;
 		
+		// cheat and render early for responsiveness
+		this.renderUserLabel();
 		this.renderHighlight();
 		
-		this.asyncUpdate();
+		this.queueUpdate();
 		return false;
 	},
 	
@@ -987,7 +978,7 @@ Card = Classy(Stateful, {
 		
 		this.moving = false;
 		
-		this.asyncUpdate();
+		this.queueUpdate();
 		this.renderHighlight();
 	},
 	
@@ -1456,6 +1447,8 @@ var CardSelection = {
 		this.cards.forEach(function (card) {
 			card.dragStart(x, y);
 		});
+		Stateful.prototype.flushUpdates();
+		
 		this.refreshBounds();
 		this.detectOverlaps();
 		
@@ -1568,6 +1561,7 @@ var CardSelection = {
 		this.cards.forEach(function (card) {
 			card.peek();
 		});
+		Stateful.prototype.flushUpdates();
 	},
 
 	// flip the positions of the cards, not just the faces.
