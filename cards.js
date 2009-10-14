@@ -1517,6 +1517,7 @@ var CardSelection = {
 		this.cards.forEach(function (card) {
 			card.dragEnd();
 		});
+		Stateful.prototype.flushUpdates();
 	},
 	
 	// If a card overlaps the selection now, return the card in the selection
