@@ -73,12 +73,12 @@ The reason for having a wrapper is to separate the label from the card so that i
 	position: absolute;
 }
 
-.cardWrapper.highliht {
-	outline: 1px solid black;
-}
-
 .card {
 	-webkit-transform-style: preserve-3d;
+	
+	box-shadow:  0 1px 4px rgba(0, 0, 0, 0.4);
+	-webkit-box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.4);
+	-moz-box-shadow:  0 1px 4px rgba(0, 0, 0, 0.4);
 }
 
 .card, .back, .front {
