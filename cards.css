@@ -226,8 +226,8 @@ The reason for having a wrapper is to separate the label from the card so that i
 	padding: 0 2em;
 }
 #close button {
-	float: right;
-	margin-right: -2em;
+	position: absolute;
+	right: .3em;
 }
 
 .showDialog #dialog, #dialog .visible {

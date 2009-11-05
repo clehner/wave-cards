@@ -34,7 +34,7 @@
 		
 		<div id="dialog">
 			<div id="close">
-			    <span id="dialogTitle"></span>
+				<span id="dialogTitle"></span>
 				<button id="closeDialogBtn" title="Close this message box">X</button>
 			</div>
 			
