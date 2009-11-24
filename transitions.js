@@ -9,15 +9,6 @@ var memoizer = function (fn) {
 // Tween CSS properties (emulating CSS 3 Transitions)
 Transition = (function () {
 	
-	var compiledRegex1 = memoizer(function (prop) {
-		return new RegExp("(\\s|^)" + prop + "(,\\s|$)");
-	});
-	
-	var compiledRegex2 = memoizer(function (prop) {
-		return new RegExp(prop + "(,\\s|$)|(,\\s|^)" + prop +
-			"|^" + prop + "$", "g");
-	});
-
 	// Feature detection for CSS Transforms
 	var cssTransformType = (function () {
 		var s = document.createElement("div").style;
@@ -31,6 +22,17 @@ Transition = (function () {
 
 	// WebKit has native support for CSS transitions
 	if (window.WebKitTransitionEvent) {
+	
+		// Cache regexes, for speed.
+		var compiledRegex1 = memoizer(function (prop) {
+			return new RegExp("(\\s|^)" + prop + "(,\\s|$)");
+		});
+		
+		var compiledRegex2 = memoizer(function (prop) {
+			return new RegExp(prop + "(,\\s|$)|(,\\s|^)" + prop +
+				"|^" + prop + "$", "g");
+		});
+
 		var T = function (elm, css, duration, cb) {
 			// keep track of the transitions for each element
 			if (typeof elm._transitions == "undefined") elm._transitions = {};
