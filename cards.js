@@ -1,5 +1,4 @@
 /*
-
 Wave-Cards
 A Google Wave Gadget for playing cards
 v1.0
@@ -23,7 +22,6 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
-
 */
 
 (function () {
@@ -84,9 +82,10 @@ function gadgetLoad() {
 	addEventListener("keyup", onKeyUp, false);
 	addEventListener("blur", onBlur, false);
 	addEventListener("focus", onFocus, false);
-	cardsContainer.addEventListener(
-		"mousedown", onMouseDown, false);
-	
+	cardsContainer.addEventListener("mousedown", onMouseDown, false);
+	cardsContainer.addEventListener("dblclick", onDoubleClick, false);
+	cardsWindow.addEventListener("contextmenu", onContextMenu, false);
+
 	// initialize dialog boxes
 	dialogBox = new DialogBox();
 	
@@ -206,6 +205,28 @@ function getThing(key) {
 
 /* ---------------------------- Event listeners ---------------------------- */
 
+//@jrs - double click to flip
+function onDoubleClick(e) {
+	addEventListener("mouseup", onMouseUp, false);
+	
+	if (e.target && e.target.object && e.target.object instanceof Card) {
+		// mousedown on a card
+		
+		if (e.ctrlKey || (e.which==3) || (e.button==2)) {
+			CardSelection.peek();
+		}
+		else if (e.shiftKey) {
+			CardSelection.stack();
+		}
+		else if (e.altKey) {
+			CardSelection.shuffle();
+		}
+		else {
+			CardSelection.flip();
+		}
+	}
+}
+ 
 function onMouseDown(e) {
 	// start mouse drag
 	addEventListener("mousemove", onDrag, false);
@@ -217,6 +238,7 @@ function onMouseDown(e) {
 		var card = e.target.object;
 		
 		if (!card.selected && !e.shiftKey) {
+			// starting a new selection
 			CardSelection.clear();
 		}
 		CardSelection.add(card);
@@ -224,6 +246,11 @@ function onMouseDown(e) {
 		if (hasFocus) {
 			// prevent dragging the images in firefox
 			if (e.preventDefault) e.preventDefault();
+		}
+
+		//@jrs - drag under with ctrl or right-click
+		if ((e.which==3) || (e.button==2)) {
+			dragUnderMode = true;
 		}
 		
 	} else {
@@ -240,18 +267,30 @@ function onMouseDown(e) {
 	drag.dragStart(rot.x, rot.y, e);
 }
 
-function onMouseUp() {
+function onMouseUp(e) {
 	// release the drag
 	drag.dragEnd();
 	drag = null;
 	removeEventListener("mouseup", onMouseUp, false);
 	removeEventListener("mousemove", onDrag, false);
+	
+	//if we were using a mouse+keyboard toggle to drag under, release @jrs
+	if ((e.which==3) || (e.button==2)) {
+		dragUnderMode = false;
+	}
 }
 
 function onDrag(e) {
 	var rot = rotatePoint(e.clientX, e.clientY, rotation,
 		cardsContainer.offsetWidth, cardsContainer.offsetHeight);
 	drag.drag(rot.x, rot.y);
+}
+
+// stop the context menu on cards
+function onContextMenu(e) {
+	if (e.target && e.target.object && e.target.object instanceof Card) {
+		e.preventDefault();
+	}
 }
 
 // Hotkeys
@@ -294,7 +333,7 @@ function onKeyUp(e) {
 	keydowns[key] = false;
 	
 	switch(key) {
-		// U - slide cards above other cards
+		// U - drag cards above other cards
 		case 85:
 			dragUnderMode = false;
 			CardSelection.detectOverlaps();
@@ -316,7 +355,6 @@ function onBlur() {
 // create a deck of cards
 function addDeck(colorId, numJokers, shuffled) {
 	var newDeck, deckShift, cards, card, positions, pos, types, type, i, l, s, r, xy;
-	
 	
 	newDeck = getThing("deck_"+(++highestId));
 	
@@ -1313,7 +1351,7 @@ Card = Classy(Stateful, {
 			}, 0);
 			
 		} else {
-			// no transforms; use opacity.
+			// no transforms support; use opacity.
 			this.dom.back.style.opacity = ~~faceup;
 			this.removeFlipClass();
 			Transition(this.dom.back, {opacity: ~~!this.faceup},
@@ -1337,7 +1375,6 @@ Card = Classy(Stateful, {
 // Cards Selection
 var CardSelection = {
 	cards: [],
-	
 	x: 0,
 	y: 0,
 	startX: 0,

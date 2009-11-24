@@ -17,11 +17,11 @@
 	<script type="text/javascript"
 		src="http://wave-cards.googlecode.com/svn/trunk/classy.js"></script>
 	<script type="text/javascript"
-		src="http://wave-cards.googlecode.com/svn/trunk/transitions.js?1"></script>
+		src="http://wave-cards.googlecode.com/svn/trunk/transitions.js"></script>
 	<script type="text/javascript"
-		src="http://wave-cards.googlecode.com/svn/trunk/cards.js?5"></script>
+		src="http://wave-cards.googlecode.com/svn/trunk/cards.js?6"></script>
 	<link rel="stylesheet" type="text/css"
-		href="http://wave-cards.googlecode.com/svn/trunk/cards.css?2"/>
+		href="http://wave-cards.googlecode.com/svn/trunk/cards.css?3"/>
 	
 	<div id="cardsWindow">
 		<div id="buttons">

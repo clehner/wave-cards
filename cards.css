@@ -262,6 +262,10 @@ The reason for having a wrapper is to separate the label from the card so that i
 #help dl.wide dd {
 	margin-left: 4em;
 }
+#help dl em {
+	font-style: normal;
+	font-weight: bold;
+}
 
 
 /* --------- Decks dialog --------- */
