@@ -455,11 +455,16 @@ function rotatePoint(x, y, a, w, h) {
 	}
 }
 
+// speed up regexes by caching them
+var getClassRegex = memoizer(function (cls) {
+	return new RegExp("(\\s|^)" + cls + "(\\s|$)");
+});
+
 // Return whether or not an element has a class.
 function hasClass(ele, cls) {
 	if (!ele) throw new Error("not an element, can't add class name.");
 	if (ele.className) {
-		return new RegExp("(\\s|^)" + cls + "(\\s|$)").test(ele.className);
+		return getClassRegex(cls).test(ele.className);
 	}
 }
 
@@ -471,8 +476,7 @@ function addClass(ele, cls) {
 // Remove a class from an element.
 function removeClass(ele, cls) {
 	if (hasClass(ele, cls)) {
-		var reg = new RegExp("(\\s|^)" + cls + "(\\s|$)");
-		ele.className = ele.className.replace(reg, " ");
+		ele.className = ele.className.replace(getClassRegex(cls), " ");
 	}
 }
 

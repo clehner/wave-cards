@@ -1,5 +1,22 @@
+// simple single-argument memozier
+var memoizer = function (fn) {
+    var cache = {};
+	return function (arg) {
+		return cache[arg] || (cache[arg] = fn(arg));
+	};
+};
+
 // Tween CSS properties (emulating CSS 3 Transitions)
 Transition = (function () {
+	
+	var compiledRegex1 = memoizer(function (prop) {
+		return new RegExp("(\\s|^)" + prop + "(,\\s|$)");
+	});
+	
+	var compiledRegex2 = memoizer(function (prop) {
+		return new RegExp(prop + "(,\\s|$)|(,\\s|^)" + prop +
+			"|^" + prop + "$", "g");
+	});
 
 	// Feature detection for CSS Transforms
 	var cssTransformType = (function () {
@@ -48,8 +65,7 @@ Transition = (function () {
 					if (!transProp || transProp == "all" || transProp == "none") {
 						elm.style.WebkitTransitionProperty = property2;
 						
-					} else if (!transProp.match(new RegExp("(\\s|^)" +
-						property2 + "(,\\s|$)"))) {
+					} else if (!transProp.match(compiledRegex1(property2))) {
 						
 						elm.style.WebkitTransitionProperty = transProp + ", " + property2;
 					}
@@ -71,8 +87,7 @@ Transition = (function () {
 					t.stop = function () {
 						elm.style.WebkitTransitionProperty =
 							style.WebkitTransitionProperty.
-							replace(new RegExp(property2 + "(,\\s|$)|(,\\s|^)" +
-							property2 + "|^" + property2 + "$", "g"), "") ||
+							replace(compiledRegex2(property2), "") ||
 							"none";
 						
 						delete elm._transitions[property];
