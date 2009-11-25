@@ -168,7 +168,10 @@ function participantsUpdated() {
 		// Update avatars.
 		if (addMarkerIcon) {
 			addMarkerIcon.src = me.getThumbnailUrl();
-			$("addMarkerIcon2").src = me.getThumbnailUrl();
+		}
+		var icon2 = $("addMarkerIcon2");
+		if (icon2) {
+			icon2.src = me.getThumbnailUrl();
 		}
 		
 		var playerObjects = Player.prototype.allPlayers;
