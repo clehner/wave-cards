@@ -56,7 +56,7 @@ The reason for having a wrapper is to separate the label from the card so that i
 	float: left;
 }
 
-#addMarkerIcon {
+#addMarkerIcon, #addMarkerIcon2 {
 	width: 14px;
 	height: 14px;
 }
@@ -293,27 +293,31 @@ hr {
 
 /* --------- Player markers --------- */
 
+.playerMarker {
+	width: 68px;
+	height: 68px;
+}
 .playerMarker img {
-	width: 60px;
-	height: 60px;
+	width: 40px;
+	height: 40px;
 	padding: 13px;
 	border: 1px solid black;
 	background-color: white;
-	        border-radius: 44px; /* padding + border + size/2 */
-	   -moz-border-radius: 44px;
-	-webkit-border-radius: 44px;
+	        border-radius: 34px; /* padding + border + size/2 */
+	   -moz-border-radius: 34px;
+	-webkit-border-radius: 34px;
 }
 .playerMarker .card {
-	width: 88px; /* img.(size + 2*(padding + border)) */
-	height: 88px;
+	width: 68px; /* img.(size + 2*(padding + border)) */
+	height: 68px;
 	padding: 5px;
 	margin: -5px;
 	        box-shadow: none;
 	   -moz-box-shadow: none;
 	-webkit-box-shadow: none;
-	        border-radius: 49px;
-	   -moz-border-radius: 49px;
-	-webkit-border-radius: 49px;
+	        border-radius: 39px; /* padding + size/2 */
+	   -moz-border-radius: 39px;
+	-webkit-border-radius: 39px;
 }
 .playerMarker.highlight .card {
 	outline: none;

@@ -166,6 +166,7 @@ function participantsUpdated() {
 	
 	// Update avatars.
 	addMarkerIcon.src = me.getThumbnailUrl();
+	$("addMarkerIcon2").src = me.getThumbnailUrl();
 	
 	var playerObjects = Player.prototype.allPlayers;
 	for (id in playerObjects) {
@@ -258,9 +259,12 @@ function onMouseDown(e) {
 		}
 		CardSelection.add(card);
 
-		if (hasFocus) {
-			// prevent dragging the images in firefox
-			e.preventDefault();
+		// prevent dragging the images in firefox
+		e.preventDefault();
+
+		// but don't prevent focus from being taken
+		if (!hasFocus) {
+			window.focus();
 		}
 
 		//@jrs - drag under with ctrl or right-click
@@ -1873,8 +1877,8 @@ var SelectionBox = {
 	startY: 0,
 	x: 0,
 	y: 0,
-	width: 88,
-	height: 88,
+	width: 0,
+	height: 0,
 	
 	overlaps: {},
 	
@@ -1951,8 +1955,8 @@ var SelectionBox = {
 Player = Classy(Movable, {
 	stateNames: ["firstVisit", "hasMarker", "x", "y", "z", "user"],
 	allPlayers: {},
-	width: 80,
-	height: 80,
+	width: 68,
+	height: 68,
 	stateX: 100,
 	stateY: 100,
 	firstVisit: true,
@@ -2022,6 +2026,7 @@ function togglePlayerMarker() {
 	} else {
 		// Add marker
 		meState.hasMarker = true;
+		meState.z = highestZ;
 	}
 	meState.sendUpdate();
 }

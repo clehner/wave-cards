@@ -73,6 +73,8 @@
 				<dd>Rotate your view of the board 180&deg;, so you can play across from another person.</dd>
 				<dt><button>Decks</button></dt>
 				<dd>Add or remove decks from the table. You can choose to add a deck with or without jokers, and shuffled or unshuffled.</dd>
+				<dt><button><img id="addMarkerIcon" src="https://wave.google.com/wave/static/images/unknown.jpg" alt="your icon" /></button></dt>
+				<dd>Add or remove your player marker from the table. You can move this around like a card and use it to indicate your area of the table.</dd>
 				</dl>
 			</div>
 			
