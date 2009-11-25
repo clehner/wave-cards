@@ -364,10 +364,10 @@ function onFocus() {
 }
 
 // stop dragging cards when the window loses focus
-function onBlur() {
+function onBlur(e) {
 	hasFocus = false;
 	if (drag) {
-		onMouseUp();
+		onMouseUp(e);
 	}
 }
 
