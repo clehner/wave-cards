@@ -30,6 +30,9 @@ var
 	cardsContainer,          // #cards
 	cardsWindow,             // #cardsWindow
 	decksList,               // #decksList
+	addMarkerIcon,           // #addMarkerIcon
+
+	dialogbox,
 	
 	rotation = 0,            // angle the card container is rotated.
 	
@@ -61,6 +64,10 @@ var
   #cards
 */
 
+function $(id) {
+	return document.getElementById(id);
+}
+
 /* ---------------------------- Gadget State ---------------------------- */
 
 function gadgetLoad() {
@@ -68,9 +75,10 @@ function gadgetLoad() {
 	if (gadgetLoaded) return;
 
 	// Get DOM references
-	cardsContainer = document.getElementById("cards");
-	cardsWindow = document.getElementById("cardsWindow");
-	decksList = document.getElementById("decksList");
+	cardsContainer = $("cards");
+	cardsWindow = $("cardsWindow");
+	decksList = $("decksList");
+	addMarkerIcon = $("addMarkerIcon");
 	
 	// Wait for everything to be available
 	if (!cardsContainer) {
@@ -85,16 +93,15 @@ function gadgetLoad() {
 	cardsContainer.addEventListener("mousedown", onMouseDown, false);
 	cardsContainer.addEventListener("dblclick", onDoubleClick, false);
 	cardsWindow.addEventListener("contextmenu", onContextMenu, false);
+	addMarkerIcon.addEventListener("mousedown", onMouseDownMarkerIcon, false);
 
 	// initialize dialog boxes
 	dialogBox = new DialogBox();
 	
-	document.getElementById("helpBtn").addEventListener(
-		"click", dialogBox.openHelp, false);
-	document.getElementById("rotateBtn").addEventListener(
-		"click", rotateTable, false);
-	document.getElementById("decksBtn").addEventListener(
-		"click", dialogBox.openDecks, false);
+	$("helpBtn").addEventListener("click", dialogBox.openHelp, false);
+	$("rotateBtn").addEventListener("click", rotateTable, false);
+	$("decksBtn").addEventListener("click", dialogBox.openDecks, false);
+	$("addMarkerBtn").addEventListener("click", togglePlayerMarker, false);
 	
 	// Set up wave callbacks
 	if (wave && wave.isInWaveContainer()) {
@@ -157,6 +164,14 @@ function participantsUpdated() {
 	players = wave.getParticipants();
 	me = wave.getViewer();
 	
+	// Update avatars.
+	addMarkerIcon.src = me.getThumbnailUrl();
+	
+	var playerObjects = Player.prototype.allPlayers;
+	for (id in playerObjects) {
+		playerObjects[id].renderAvatar();
+	}
+
 	if (!participantsLoaded && me) {
 		participantsLoaded = true;
 		if (stateLoaded) {
@@ -209,7 +224,7 @@ function getThing(key) {
 function onDoubleClick(e) {
 	addEventListener("mouseup", onMouseUp, false);
 	
-	if (e.target && e.target.object && e.target.object instanceof Card) {
+	if (e.target && e.target.object && e.target.object instanceof Movable) {
 		// mousedown on a card
 		
 		if (e.ctrlKey || (e.which==3) || (e.button==2)) {
@@ -232,7 +247,7 @@ function onMouseDown(e) {
 	addEventListener("mousemove", onDrag, false);
 	addEventListener("mouseup", onMouseUp, false);
 	
-	if (e.target && e.target.object && e.target.object instanceof Card) {
+	if (e.target && e.target.object && e.target.object instanceof Movable) {
 		// mousedown on a card
 		drag = CardSelection;
 		var card = e.target.object;
@@ -245,7 +260,7 @@ function onMouseDown(e) {
 
 		if (hasFocus) {
 			// prevent dragging the images in firefox
-			if (e.preventDefault) e.preventDefault();
+			e.preventDefault();
 		}
 
 		//@jrs - drag under with ctrl or right-click
@@ -288,7 +303,7 @@ function onDrag(e) {
 
 // stop the context menu on cards
 function onContextMenu(e) {
-	if (e.target && e.target.object && e.target.object instanceof Card) {
+	if (e.target && e.target.object && e.target.object instanceof Movable) {
 		e.preventDefault();
 	}
 }
@@ -350,6 +365,11 @@ function onBlur() {
 	if (drag) {
 		onMouseUp();
 	}
+}
+
+function onMouseDownMarkerIcon(e) {
+	// stop dragging the icon.
+	e.preventDefault();
 }
 
 // create a deck of cards
@@ -487,7 +507,7 @@ function toggleClass(ele, cls, yes) {
 }
 
 // Randomly shuffle the elements of an array.
-// source: http://stackoverflow.com/questions/962802#962890
+// http://stackoverflow.com/questions/962802#962890
 function shuffle(array) {
 	var tmp, current, top = array.length;
 
@@ -725,34 +745,13 @@ Deck = Classy(Stateful, {
 
 
 
-/* ---------------------------- Card ---------------------------- */
+/* ---------------------------- Movable ---------------------------- */
 
-Card = Classy(Stateful, {
-	suits: ["diamonds", "spades", "hearts", "clubs"],
-	ranks: ["ace", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "jack", "queen", "king", "joker"],
-
-	dom: (function () {
-		var wrapper, label, card, front, back;
-		
-		// Create "prototype" DOM elements
-		(wrapper = document.createElement("div")) .className = "cardWrapper";
-		(card    = document.createElement("div")) .className = "card";
-		(label   = document.createElement("span")).className = "label";
-		(front   = document.createElement("div")) .className = "front";
-		(back    = document.createElement("div")) .className = "back";
-		
-		wrapper.appendChild(card);
-		wrapper.appendChild(label);
-		card.appendChild(front);
-		card.appendChild(back);
-		
-		return {
-			wrapper: wrapper
-		};
-	})(),
+Movable = Classy(Stateful, {
+	all: {}, // all cards, by key
 	
-	all: [], // all cards, by id. shared
-	
+	width: 0,
+	height: 0,
 	x: NaN,
 	y: NaN,
 	z: 0,
@@ -761,13 +760,7 @@ Card = Classy(Stateful, {
 	oldZ: NaN,
 	stateX: 0,
 	stateY: 0,
-
-	suit: 0,
-	rank: 0,
-	width: 73,
-	height: 97,
 	title: "",
-
 	user: null,       // wave user last to touch it
 	userClass: "",    // css class representing the user
 	deck: null,       // the deck this card is apart of 
@@ -776,49 +769,53 @@ Card = Classy(Stateful, {
 	movingNow: false, // animating a move. not necessarily being held
 	selected: false,  // is in the selection
 	dragging: false,  // is being dragged by the mouse
-	faceup: false,    // which side is up
-	flipping: false,  // animating a flip
-	peeking: false,   // we are peeking at the card
-	peeked: false,    // someone else is peeking at the card
+	overlaps: {},     // other movables that are overlapping this one.
 	
-	overlaps: {}, // other movables that are overlapping this one.
-	
-	stateNames: ["deck", "suit", "rank", "flip", "peek", "moving",
-		"x", "y", "z", "user"],
+	stateNames: ["deck", "moving", "x", "y", "z", "user"],
 	
 	makeState: function () {
-		with(this) {
-			return {
-				deck: deck ? deck.id : "",
-				suit: suit,
-				rank: rank,
-				x: ~~stateX,
-				y: ~~stateY,
-				z: ~~z,
-				flip: faceup ? "f" : "",
-				moving: moving ? "m" : "",
-				peek: peeking ? "p" : "",
-				user: me ? me.getId() : ""
-			};
-		}
+		return {
+			deck: this.deck ? this.deck.id : "",
+			x: ~~this.stateX,
+			y: ~~this.stateY,
+			z: ~~this.z,
+			moving: this.moving ? "m" : "",
+			user: me ? me.getId() : ""
+		};
 	},
+
+	dom: (function () {
+		var wrapper, label, card, front, back;
+		
+		// Create "prototype" DOM elements
+		(wrapper = document.createElement("div")) .className = "cardWrapper";
+		(card    = document.createElement("div")) .className = "card";
+		(label   = document.createElement("span")).className = "label";
+		
+		wrapper.appendChild(card);
+		wrapper.appendChild(label);
+		
+		return {
+			wrapper: wrapper
+		};
+	})(),
 	
 	constructor: function () {
 		Stateful.apply(this, arguments);
 		
 		highestId = Math.max(highestId, this.id);
 		
-		this.all[this.id] = this;
-		this.overlaps = [];
+		this.all[this.key] = this;
+		this.overlaps = {};
 		
 		// Clone the dom elements from the prototype into this instance
 		var wrapper, card;
 		this.dom = {
 			wrapper: (wrapper = this.dom.wrapper.cloneNode(1)),
 			card: (card = wrapper.childNodes[0]),
-			label: wrapper.childNodes[1],
-			front: card.childNodes[0],
-			back: card.childNodes[1]
+			label: wrapper.childNodes[1]
+			//front: card.childNodes[0],
+			//back: card.childNodes[1]
 		};
 		
 		// Give the dom elements references to this card object
@@ -831,20 +828,18 @@ Card = Classy(Stateful, {
 		if (this.removed) return; // beat not the bones of the buried
 		Stateful.prototype.remove.call(this);
 		
-		delete this.all[this.id];
+		delete this.all[this.key];
 		
 		// stop dragging
 		//if (captured == this) captured = null;
 
 		// remove from z-index cache
 		ZIndexCache.remove(this);
-
 		
 		// deselect
 		if (this.selected) {
 			CardSelection.remove(this);
 		}
-		//if (this.selected) delete selection[selection.indexOf(this.selected)];
 		
 		// stop any running transitions
 		Transition.stopAll(this.dom.card);
@@ -856,10 +851,9 @@ Card = Classy(Stateful, {
 			delete this.dom[node].object;
 		}
 		delete this.dom;
-		//deleteAll(this, ["wrapper", "card", "label", "front", "back"], ["object"]);
 
 	},
-	
+		
 	update: function (changes, newState) {
 	
 		if (!this.loaded) {
@@ -868,12 +862,6 @@ Card = Classy(Stateful, {
 			cardsContainer.appendChild(this.dom.wrapper);
 		}
 	
-		if (changes.suit || changes.rank) {
-			if (changes.suit) this.suit = newState.suit;
-			if (changes.rank) this.rank = newState.rank;
-			this.renderFace();
-		}
-		
 		if (changes.deck) {
 			this.deck = getThing("deck_" + newState.deck);
 			this.renderDeck();
@@ -918,33 +906,6 @@ Card = Classy(Stateful, {
 			this.user = wave.getParticipantById(newState.user);
 			this.renderUserLabel();
 		}
-		
-		if (changes.flip) {
-			// Flip the card
-			this.faceup = !!newState.flip;
-			this.renderFlip();
-		}
-		
-		if (changes.peek || (changes.user && this.peeked)) {
-			// A user is peeking at the card.
-			// If the card remains peeked but its owner changes, we need
-			// to recalculate who it is that is peeking.
-			this.peeked = !!newState.peek;
-			this.peeking = this.peeked && this.isMine();
-			this.renderPeek();
-		}
-	},
-	
-	// Flip this card.
-	flip: function () {
-		this.faceup = !this.faceup;
-		this.queueUpdate();
-	},
-	
-	// Peek this card.
-	peek: function () {
-		this.peeking = !this.peeking;
-		this.queueUpdate();
 	},
 	
 	// return whether an object is overlapping another.
@@ -961,7 +922,7 @@ Card = Classy(Stateful, {
 	// return an id-map of all cards overlapping this one.
 	getOverlappingObjects: function () {
 		var overlappingObjects = {};
-		var all = Card.prototype.all;
+		var all = Movable.prototype.all;
 		for (var i in all) {
 			var item = all[i];
 			if (this.isOverlapping(item)) {
@@ -1125,32 +1086,11 @@ Card = Classy(Stateful, {
 		return (this.user == me) || (this.user && me &&
 			this.user.getId() === me.getId());
 	},
-		
-	/* ---------------------------- Card View functions ---------------------------- */
 	
-	// Set the card's classes and title to its suit and rank.
-	renderFace: function () {
-		var rank = this.ranks[this.rank];
-		var suit = this.suits[this.suit];
-		
-		if (rank == "joker") {
-			// Joker can be rendered only in spades or diamonds
-			this.suit %= 2;
-			suit = this.suits[this.suit];
-			
-			// because it has no suit, only color.
-			var color = (this.suit == 0) ? "black" : "red";
-			this.title = color + " joker";
-			
-		} else {
-			this.title = rank + " of " + suit;
-		}
-		this.dom.front.setAttribute("title", this.title);
-
-		addClass(this.dom.front, rank);
-		addClass(this.dom.front, suit);
-		
-	},
+	flip: function () {},
+	peek: function () {},
+	
+	/* ---------------------------- View functions ---------------------------- */
 	
 	renderUserLabel: function () {
 		var playerNum = players.indexOf(this.user);
@@ -1171,13 +1111,6 @@ Card = Classy(Stateful, {
 				this.user.getDisplayName().match(/^[^ ]+/, '')[0];
 			this.dom.label.innerHTML = userLabel;
 		}
-	},
-
-	// If the user is peeking at the card, show a corner of the back through the front.
-	renderPeek: function () {
-		toggleClass(this.dom.wrapper, "peeked", this.peeked || this.peeking);
-		toggleClass(this.dom.wrapper, "peeking", this.peeking);
-		this.renderHighlight();
 	},
 
 	// determine whether the card should have a highlight or not
@@ -1277,8 +1210,97 @@ Card = Classy(Stateful, {
 		this.oldZ = this.z;
 		this.dom.card.style.zIndex = this.z;
 		if (this.z > highestZ) highestZ = this.z;
+	}
+});
+
+
+/* ---------------------------- Flippable ---------------------------- */
+
+Flippable = Classy(Movable, {
+	faceup: false,    // which side is up
+	flipping: false,  // animating a flip
+	peeking: false,   // we are peeking at the card
+	peeked: false,    // someone else is peeking at the card
+
+	stateNames: ["deck", "flip", "peek", "moving", "x", "y", "z", "user"],
+	
+	makeState: function () {
+		var state = Movable.prototype.makeState.call(this);
+		state.flip = this.faceup ? "f" : "";
+		state.peek = this.peeking ? "p" : "";
+		return state;
 	},
 	
+	dom: (function () {
+		var wrapper, card, front, back;
+		
+		// Add a back node into the wrapper "prototype" node
+		wrapper = Movable.prototype.dom.wrapper.cloneNode(1);
+		card = wrapper.childNodes[0];
+		
+		front = document.createElement("div");
+		front.className = "front";
+		card.appendChild(front);
+		
+		back = document.createElement("div");
+		back.className = "back";
+		card.appendChild(back);
+		
+		return {
+			wrapper: wrapper
+		};
+	})(),
+	
+	constructor: function () {
+		Movable.apply(this, arguments);
+		
+		this.dom.front = this.dom.card.childNodes[0];
+		this.dom.front.object = this;
+		
+		this.dom.back = this.dom.card.childNodes[1];
+		this.dom.back.object = this;
+	},
+	
+	update: function (changes, newState) {		
+		Movable.prototype.update.apply(this, arguments);
+		
+		if (changes.flip) {
+			// Flip the card
+			this.faceup = !!newState.flip;
+			this.renderFlip();
+		}
+		
+		if (changes.peek || (changes.user && this.peeked)) {
+			// A user is peeking at the card.
+			// If the card remains peeked but its owner changes, we need
+			// to recalculate who it is that is peeking.
+			this.peeked = !!newState.peek;
+			this.peeking = this.peeked && this.isMine();
+			this.renderPeek();
+		}
+	},
+
+	// Flip this card.
+	flip: function () {
+		this.faceup = !this.faceup;
+		this.queueUpdate();
+	},
+	
+	// Peek this card.
+	peek: function () {
+		this.peeking = !this.peeking;
+		this.queueUpdate();
+	},
+	
+	/* ---------------------------- View functions ---------------------------- */
+	
+	// If the user is peeking at the card, show a corner of the back through the front.
+	renderPeek: function () {
+		toggleClass(this.dom.wrapper, "peeked", this.peeked || this.peeking);
+		toggleClass(this.dom.wrapper, "peeking", this.peeking);
+		this.renderHighlight();
+	},
+
 	// helper functions for renderFlip
 	removeFlipClass: function () {
 		removeClass(this.dom.wrapper, this.faceup ? "facedown" : "faceup");
@@ -1365,6 +1387,64 @@ Card = Classy(Stateful, {
 				$this.renderHighlight();
 			});
 		}
+	}
+});
+
+
+/* ---------------------------- Card ---------------------------- */
+
+Card = Classy(Flippable, {
+	suits: ["diamonds", "spades", "hearts", "clubs"],
+	ranks: ["ace", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "jack", "queen", "king", "joker"],
+
+	width: 73,
+	height: 97,
+	suit: 0,
+	rank: 0,
+	
+	stateNames: ["deck", "suit", "rank", "flip", "peek", "moving",
+		"x", "y", "z", "user"],
+	
+	makeState: function () {
+		var state = Flippable.prototype.makeState.call(this);
+		state.suit = this.suit;
+		state.rank = this.rank;
+		return state;
+	},
+		
+	update: function (changes, newState) {
+		if (changes.suit || changes.rank) {
+			if (changes.suit) this.suit = newState.suit;
+			if (changes.rank) this.rank = newState.rank;
+			this.renderFace();
+		}
+		Flippable.prototype.update.apply(this, arguments);
+	},
+		
+	/* ---------------------------- Card View functions ---------------------------- */
+	
+	// Set the card's classes and title to its suit and rank.
+	renderFace: function () {
+		var rank = this.ranks[this.rank];
+		var suit = this.suits[this.suit];
+		
+		if (rank == "joker") {
+			// Joker can be rendered only in spades or diamonds
+			this.suit %= 2;
+			suit = this.suits[this.suit];
+			
+			// because it has no suit, only color.
+			var color = (this.suit == 0) ? "black" : "red";
+			this.title = color + " joker";
+			
+		} else {
+			this.title = rank + " of " + suit;
+		}
+		this.dom.front.setAttribute("title", this.title);
+
+		addClass(this.dom.front, rank);
+		addClass(this.dom.front, suit);
+		
 	},
 	
 	renderDeck: function () {
@@ -1793,8 +1873,8 @@ var SelectionBox = {
 	startY: 0,
 	x: 0,
 	y: 0,
-	width: 0,
-	height: 0,
+	width: 88,
+	height: 88,
 	
 	overlaps: {},
 	
@@ -1868,29 +1948,83 @@ var SelectionBox = {
 
 /* ---------------------------- Player ---------------------------- */
 
-Player = Classy(Stateful, {
-	stateNames: ["firstVisit"],
-	all: {},
-	
-	participantObject: null,
+Player = Classy(Movable, {
+	stateNames: ["firstVisit", "hasMarker", "x", "y", "z", "user"],
+	allPlayers: {},
+	width: 80,
+	height: 80,
+	stateX: 100,
+	stateY: 100,
 	firstVisit: true,
+	hasMarker: false,
+	playerId: "",
+	
+	dom: (function () {
+		var wrapper, card;
+		
+		wrapper = Movable.prototype.dom.wrapper.cloneNode(1);
+		addClass(wrapper, "playerMarker");
+		card = wrapper.childNodes[0];
+		avatar = document.createElement("img");
+		card.appendChild(avatar);
+		
+		return {
+			wrapper: wrapper
+		};
+	})(),
 
 	constructor: function () {
-		Stateful.apply(this, arguments);
-		this.all[this.id] = this;
-		this.participantObject = wave.getParticipantById(this.id);
+		Movable.apply(this, arguments);
+		this.allPlayers[this.key] = this;
+		
+		this.playerId = this.key.split("_")[1];
+		
+		this.dom.avatar = this.dom.card.childNodes[0];
+		this.dom.avatar.object = this;
+		
+		this.renderAvatar();
 	},
 
 	makeState: function () {
-		return {
-			firstVisit: this.firstVisit ? "1" : "0"
-		};
+		var state = Movable.prototype.makeState.call(this);
+		state.firstVisit = this.firstVisit ? "1" : "";
+		state.hasMarker = this.hasMarker ? "1" : "";
+		return state;
 	},
 	
-	update: function (changes, newState) {
-		this.firstVisit = (newState.firstVisit == "1");
+	update: function (changes, state) {
+		this.firstVisit = !!state.firstVisit;
+		if (changes.hasMarker) {
+			this.hasMarker = !!state.hasMarker;
+			this.renderHasMarker();
+		}
+		Movable.prototype.update.apply(this, arguments);
+	},
+	
+	renderHasMarker: function () {
+		this.dom.wrapper.style.display = this.hasMarker ? "block" : "none";
+	},
+
+	renderAvatar: function () {
+		var participant = wave.getParticipantById(this.playerId);
+		this.dom.wrapper.setAttribute("title", participant.getDisplayName() +
+			"'s player marker");
+		this.dom.avatar.src = participant ? participant.getThumbnailUrl() :
+			"https://wave.google.com/wave/static/images/unknown.jpg";
 	}
 });
+
+// Add or remove the viewer's player marker
+function togglePlayerMarker() {
+	if (meState.hasMarker) {
+		// Remove marker
+		meState.hasMarker = false;
+	} else {
+		// Add marker
+		meState.hasMarker = true;
+	}
+	meState.sendUpdate();
+}
 
 /* ---------------------------- Dialog boxes ---------------------------- */
 
@@ -1905,7 +2039,7 @@ var DialogBox = Classy({constructor: function () {
 		}
 		
 		// set title
-		document.getElementById("dialogTitle").innerHTML = title;
+		$("dialogTitle").innerHTML = title;
 		
 		// hide previous dialog
 		close();
@@ -1935,18 +2069,18 @@ var DialogBox = Classy({constructor: function () {
 	};
 	
 	// initialize close 
-	document.getElementById("closeDialogBtn").addEventListener("click", close, false);
+	$("closeDialogBtn").onclick = close;
 		
 	// Initialize decks dialog
-	document.getElementById("deckColor").onchange = function () {
-		document.getElementById("deckIcon").className = "deckIcon " +
+	$("deckColor").onchange = function () {
+		$("deckIcon").className = "deckIcon " +
 			Deck.prototype.colors[this.value];
 	}
 	
-	document.getElementById("addDeckBtn").onclick = function () {
-		var color = document.getElementById("deckColor").value;
-		var jokers = document.getElementById("deckJokers").value;
-		var shuffled = document.getElementById("deckShuffled").value;
+	$("addDeckBtn").onclick = function () {
+		var color = $("deckColor").value;
+		var jokers = $("deckJokers").value;
+		var shuffled = $("deckShuffled").value;
 		
 		addDeck(color, jokers, shuffled);
 	}
@@ -1955,12 +2089,12 @@ var DialogBox = Classy({constructor: function () {
 		
 	// open the help dialog
 	this.openHelp = function () {
-		open(document.getElementById("help"), "Instructions");
+		open($("help"), "Instructions");
 	};
 		
 	// open the decks dialog
 	this.openDecks = function () {
-		open(document.getElementById("decks"), "Decks");
+		open($("decks"), "Decks");
 	};
 	
 }});

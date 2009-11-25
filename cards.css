@@ -56,6 +56,11 @@ The reason for having a wrapper is to separate the label from the card so that i
 	float: left;
 }
 
+#addMarkerIcon {
+	width: 14px;
+	height: 14px;
+}
+
 /* --------- Selection Box --------- */
 
 #selectionBox {
@@ -75,10 +80,9 @@ The reason for having a wrapper is to separate the label from the card so that i
 
 .card {
 	-webkit-transform-style: preserve-3d;
-	
-	box-shadow:  0 1px 4px rgba(0, 0, 0, 0.4);
 	-webkit-box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.4);
-	-moz-box-shadow:  0 1px 4px rgba(0, 0, 0, 0.4);
+	   -moz-box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.4);
+	        box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.4);
 }
 
 .card, .back, .front {
@@ -267,7 +271,6 @@ The reason for having a wrapper is to separate the label from the card so that i
 	font-weight: bold;
 }
 
-
 /* --------- Decks dialog --------- */
 
 hr {
@@ -286,4 +289,35 @@ hr {
 }
 #decksList li:hover {
 	background-color: rgba(0, 0, 0, 0.1);
+}
+
+/* --------- Player markers --------- */
+
+.playerMarker img {
+	width: 60px;
+	height: 60px;
+	padding: 13px;
+	border: 1px solid black;
+	background-color: white;
+	        border-radius: 44px; /* padding + border + size/2 */
+	   -moz-border-radius: 44px;
+	-webkit-border-radius: 44px;
+}
+.playerMarker .card {
+	width: 88px; /* img.(size + 2*(padding + border)) */
+	height: 88px;
+	padding: 5px;
+	margin: -5px;
+	        box-shadow: none;
+	   -moz-box-shadow: none;
+	-webkit-box-shadow: none;
+	        border-radius: 49px;
+	   -moz-border-radius: 49px;
+	-webkit-border-radius: 49px;
+}
+.playerMarker.highlight .card {
+	outline: none;
+}
+.playerMarker.selected img {
+	border-style: dashed;
 }

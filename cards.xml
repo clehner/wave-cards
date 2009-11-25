@@ -12,6 +12,8 @@
 	<Content type="html">
 	<![CDATA[
 	
+	<link rel="stylesheet" type="text/css"
+		href="http://wave-cards.googlecode.com/svn/trunk/cards.css?4"/>
 	<script type="text/javascript"
 		src="http://wave-api.appspot.com/public/wave.js"></script>
 	<script type="text/javascript"
@@ -20,14 +22,15 @@
 		src="http://wave-cards.googlecode.com/svn/trunk/transitions.js?3"></script>
 	<script type="text/javascript"
 		src="http://wave-cards.googlecode.com/svn/trunk/cards.js?1"></script>
-	<link rel="stylesheet" type="text/css"
-		href="http://wave-cards.googlecode.com/svn/trunk/cards.css?4"/>
 	
 	<div id="cardsWindow">
 		<div id="buttons">
 			<button id="helpBtn" title="Help">?</button>
 			<button id="rotateBtn" title="Turn the table">&crarr;</button>
 			<button id="decksBtn" title="Add or remove decks">Decks</button>
+			<button id="addMarkerBtn" title="Add/remove your player marker">
+				<img id="addMarkerIcon" src="https://wave.google.com/wave/static/images/unknown.jpg" alt="" />
+			</button>
 		</div>
 		
 		<div id="cards"></div>
