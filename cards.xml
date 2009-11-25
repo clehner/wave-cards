@@ -13,15 +13,15 @@
 	<![CDATA[
 	
 	<link rel="stylesheet" type="text/css"
-		href="http://wave-cards.googlecode.com/svn/trunk/cards.css?4"/>
+		href="http://wave-cards.googlecode.com/svn/trunk/cards.css?5"/>
 	<script type="text/javascript"
 		src="http://wave-api.appspot.com/public/wave.js"></script>
 	<script type="text/javascript"
 		src="http://wave-cards.googlecode.com/svn/trunk/classy.js"></script>
 	<script type="text/javascript"
-		src="http://wave-cards.googlecode.com/svn/trunk/transitions.js?3"></script>
+		src="http://wave-cards.googlecode.com/svn/trunk/transitions.js?4"></script>
 	<script type="text/javascript"
-		src="http://wave-cards.googlecode.com/svn/trunk/cards.js?1"></script>
+		src="http://wave-cards.googlecode.com/svn/trunk/cards.js?2"></script>
 	
 	<div id="cardsWindow">
 		<div id="buttons">
