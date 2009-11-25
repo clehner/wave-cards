@@ -164,21 +164,23 @@ function participantsUpdated() {
 	players = wave.getParticipants();
 	me = wave.getViewer();
 	
-	// Update avatars.
-	addMarkerIcon.src = me.getThumbnailUrl();
-	$("addMarkerIcon2").src = me.getThumbnailUrl();
+	if (me) {
+		// Update avatars.
+		addMarkerIcon.src = me.getThumbnailUrl();
+		$("addMarkerIcon2").src = me.getThumbnailUrl();
+		
+		var playerObjects = Player.prototype.allPlayers;
+		for (id in playerObjects) {
+			playerObjects[id].renderAvatar();
+		}
 	
-	var playerObjects = Player.prototype.allPlayers;
-	for (id in playerObjects) {
-		playerObjects[id].renderAvatar();
-	}
-
-	if (!participantsLoaded && me) {
-		participantsLoaded = true;
-		if (stateLoaded) {
-			onEverythingLoad();
-		} else {
-			stateUpdated();
+		if (!participantsLoaded) {
+			participantsLoaded = true;
+			if (stateLoaded) {
+				onEverythingLoad();
+			} else {
+				stateUpdated();
+			}
 		}
 	}
 }
