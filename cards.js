@@ -1999,13 +1999,13 @@ Player = Classy(Movable, {
 
 	makeState: function () {
 		var state = Movable.prototype.makeState.call(this);
-		state.firstVisit = this.firstVisit ? "1" : "";
+		state.firstVisit = this.firstVisit ? "1" : "0";
 		state.hasMarker = this.hasMarker ? "1" : "";
 		return state;
 	},
 	
 	update: function (changes, state) {
-		this.firstVisit = !!state.firstVisit;
+		this.firstVisit = (state.firstVisit != "0");
 		if (changes.hasMarker) {
 			this.hasMarker = !!state.hasMarker;
 			this.renderHasMarker();

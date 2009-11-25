@@ -21,7 +21,7 @@
 	<script type="text/javascript"
 		src="http://wave-cards.googlecode.com/svn/trunk/transitions.js?4"></script>
 	<script type="text/javascript"
-		src="http://wave-cards.googlecode.com/svn/trunk/cards.js?4"></script>
+		src="http://wave-cards.googlecode.com/svn/trunk/cards.js?5"></script>
 	
 	<div id="cardsWindow">
 		<div id="buttons">
