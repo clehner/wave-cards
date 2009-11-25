@@ -1987,6 +1987,7 @@ Player = Classy(Movable, {
 		this.dom.avatar.object = this;
 		
 		this.renderAvatar();
+		this.renderHasMarker();
 	},
 
 	makeState: function () {
