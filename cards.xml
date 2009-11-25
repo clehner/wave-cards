@@ -13,7 +13,7 @@
 	<![CDATA[
 	
 	<link rel="stylesheet" type="text/css"
-		href="http://wave-cards.googlecode.com/svn/trunk/cards.css?5"/>
+		href="http://wave-cards.googlecode.com/svn/trunk/cards.css?6"/>
 	<script type="text/javascript"
 		src="http://wave-api.appspot.com/public/wave.js"></script>
 	<script type="text/javascript"
@@ -21,7 +21,7 @@
 	<script type="text/javascript"
 		src="http://wave-cards.googlecode.com/svn/trunk/transitions.js?4"></script>
 	<script type="text/javascript"
-		src="http://wave-cards.googlecode.com/svn/trunk/cards.js?5"></script>
+		src="http://wave-cards.googlecode.com/svn/trunk/cards.js?6"></script>
 	
 	<div id="cardsWindow">
 		<div id="buttons">
