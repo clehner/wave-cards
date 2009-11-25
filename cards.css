@@ -306,6 +306,9 @@ hr {
 	        border-radius: 34px; /* padding + border + size/2 */
 	   -moz-border-radius: 34px;
 	-webkit-border-radius: 34px;
+	-webkit-box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.4);
+	   -moz-box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.4);
+	        box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.4);
 }
 .playerMarker .card {
 	width: 68px; /* img.(size + 2*(padding + border)) */
