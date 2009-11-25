@@ -2019,8 +2019,9 @@ Player = Classy(Movable, {
 
 	renderAvatar: function () {
 		var participant = wave.getParticipantById(this.playerId);
-		this.dom.wrapper.setAttribute("title", participant.getDisplayName() +
-			"'s player marker");
+		var title = participant ? participant.getDisplayName() +
+		"'s player marker" : this.playerId + " (not present in this wave)";
+		this.dom.wrapper.setAttribute("title", title);
 		this.dom.avatar.src = participant ? participant.getThumbnailUrl() :
 			"https://wave.google.com/wave/static/images/unknown.jpg";
 	}
