@@ -109,6 +109,7 @@ Transition = (function () {
 	
 		var transitions = [], // current transitions
 		timerOn = false, // whether the timer is running
+		timerValue, // id of the timer
 		
 		// global timer that executes the transitions
 		timer = function () {
@@ -128,8 +129,10 @@ Transition = (function () {
 					t.stop(1);
 				}
 			}
-			if (transitions.length) setTimeout(timer, T.speed);
-			else timerOn = false;
+			if (!transitions.length) {
+				clearTimeout(timerValue);//setTimeout(timer, T.speed);
+				timerOn = false;
+			}
 		},
 	
 		// helper function for colors
@@ -245,9 +248,11 @@ Transition = (function () {
 				elm._transitions[property] = t;
 			}
 			
-			if (!timerOn) timer();
+			if (!timerOn) {
+				timerValue = setInterval(timer, T.speed);
+			}
 		};
-		T.speed = 20;
+		T.speed = 10;
 		T.cssTransformType = cssTransformType;
 		T.isNative = false;
 	}
