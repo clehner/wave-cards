@@ -32,7 +32,7 @@ var
 	decksList,               // #decksList
 	addMarkerIcon,           // #addMarkerIcon
 
-	dialogbox,
+	dialogBox,
 	
 	rotation = 0,            // angle the card container is rotated.
 	
@@ -175,7 +175,7 @@ function participantsUpdated() {
 		}
 		
 		var playerObjects = Player.prototype.allPlayers;
-		for (id in playerObjects) {
+		for (var id in playerObjects) {
 			playerObjects[id].renderAvatar();
 		}
 	
@@ -207,18 +207,20 @@ function onEverythingLoad() {
 
 // get a stateful object (card or deck) by its key in the wave state
 function getThing(key) {
+	var key2, type, id, Constructor, thing;
+	
 	if (!things[key]) {
-		var key2 = key.split("_");
-		var type = key2[0];
-		var id = ~~key2[1];
+		key2 = key.split("_");
+		type = key2[0];
+		id = ~~key2[1];
 		
-		var Constructor =
+		Constructor =
 			type == "card" ? Card :
 			type == "deck" ? Deck :
 			type == "player" ? Player :
 		Stateful;
 			
-		var thing = new Constructor(id, key);
+		thing = new Constructor(id, key);
 		
 		things[key] = thing;
 	}
@@ -317,6 +319,7 @@ function onContextMenu(e) {
 	if (e.target && e.target.object && e.target.object instanceof Movable) {
 		e.preventDefault();
 	}
+	onMouseUp(e);
 }
 
 // Hotkeys
@@ -329,6 +332,11 @@ function onKeyDown(e) {
 		return true;
 	}
 	keydowns[key] = true;
+	
+	if (e.shiftKey && e.altKey) {
+		// slow mo
+		transitionDuration = 2000;
+	}
 
 	switch(key) {
 		// U - drag cards under other cards
@@ -351,6 +359,10 @@ function onKeyDown(e) {
 		// P - peek
 		case 80:
 			CardSelection.peek();
+		break;
+		// R - rotate card 90¡
+		case 82:
+			CardSelection.rotate();
 	}
 }
 
@@ -358,6 +370,11 @@ function onKeyUp(e) {
 	var key = e.keyCode;
 	keydowns[key] = false;
 	
+	if (!(e.shiftKey && e.altKey)) {
+		// noslowmo
+		transitionDuration = 250;
+	}
+
 	switch(key) {
 		// U - drag cards above other cards
 		case 85:
@@ -385,7 +402,8 @@ function onMouseDownMarkerIcon(e) {
 
 // create a deck of cards
 function addDeck(colorId, numJokers, shuffled) {
-	var newDeck, deckShift, cards, card, positions, pos, types, type, i, l, s, r, xy;
+	var newDeck, cards, card, positions, pos, types, type, i, l, s, r, xy,
+		xShift, yShift;
 	
 	newDeck = getThing("deck_"+(++highestId));
 	
@@ -417,7 +435,7 @@ function addDeck(colorId, numJokers, shuffled) {
 			id: ++highestId,
 			suit: i % 2,
 			rank: 13
-		}
+		};
 	}
 	
 	// Initialize the positions separately from the suit/rank so that the
@@ -428,7 +446,7 @@ function addDeck(colorId, numJokers, shuffled) {
 			x: xy + xShift,
 			y: xy + yShift,
 			z: ++highestZ
-		}
+		};
 	}
 	
 	// Shuffle the deck if necessary.
@@ -460,12 +478,12 @@ function addDeck(colorId, numJokers, shuffled) {
 function rotateTable() {
 	var oldRotation = rotation;
 	rotation += 180;
-	var rotater = function (n) {
+	var rotator = function (n) {
 		return "rotate(" + (oldRotation + 180 * n) + "deg)";
 	};
 
 	var t = {};
-	t[Transition.cssTransformType] = rotater;
+	t[Transition.cssTransformType] = rotator;
 	Transition(cardsContainer, t, transitionDuration);
 }
 
@@ -751,7 +769,7 @@ Deck = Classy(Stateful, {
 			card.selected ^= 1;
 			card.renderSelected();
 		});
-	},
+	}
 });
 
 
@@ -781,8 +799,11 @@ Movable = Classy(Stateful, {
 	selected: false,  // is in the selection
 	dragging: false,  // is being dragged by the mouse
 	overlaps: {},     // other movables that are overlapping this one.
+	rotation: 0,      // rotation angle of the card
+	oldRotation: 0,
+	rounds: 0,        // number of 360s the card has been rotated
 	
-	stateNames: ["deck", "moving", "x", "y", "z", "user"],
+	stateNames: ["deck", "moving", "x", "y", "z", "user", "rotation"],
 	
 	makeState: function () {
 		return {
@@ -791,23 +812,29 @@ Movable = Classy(Stateful, {
 			y: ~~this.stateY,
 			z: ~~this.z,
 			moving: this.moving ? "m" : "",
-			user: me ? me.getId() : ""
+			user: me ? me.getId() : "",
+			rotation: ~~this.rotation % 360
 		};
 	},
 
 	dom: (function () {
-		var wrapper, label, card, front, back;
+		var wrapper, label, card;
 		
 		// Create "prototype" DOM elements
 		(wrapper = document.createElement("div")) .className = "cardWrapper";
+		(rotator = document.createElement("div")) .className = "rotator";
 		(card    = document.createElement("div")) .className = "card";
 		(label   = document.createElement("span")).className = "label";
 		
-		wrapper.appendChild(card);
+		wrapper.appendChild(rotator);
+		rotator.appendChild(card);
 		wrapper.appendChild(label);
 		
 		return {
-			wrapper: wrapper
+			wrapper: wrapper,
+			rotator: rotator,
+			card: card,
+			label: label
 		};
 	})(),
 	
@@ -820,13 +847,12 @@ Movable = Classy(Stateful, {
 		this.overlaps = {};
 		
 		// Clone the dom elements from the prototype into this instance
-		var wrapper, card;
+		var wrapper, rotator, card;
 		this.dom = {
 			wrapper: (wrapper = this.dom.wrapper.cloneNode(1)),
-			card: (card = wrapper.childNodes[0]),
+			rotator: (rotator = wrapper.childNodes[0]),
+			card: (card = rotator.childNodes[0]),
 			label: wrapper.childNodes[1]
-			//front: card.childNodes[0],
-			//back: card.childNodes[1]
 		};
 		
 		// Give the dom elements references to this card object
@@ -840,9 +866,6 @@ Movable = Classy(Stateful, {
 		Stateful.prototype.remove.call(this);
 		
 		delete this.all[this.key];
-		
-		// stop dragging
-		//if (captured == this) captured = null;
 
 		// remove from z-index cache
 		ZIndexCache.remove(this);
@@ -916,6 +939,11 @@ Movable = Classy(Stateful, {
 			// the user who last touched the card
 			this.user = wave.getParticipantById(newState.user);
 			this.renderUserLabel();
+		}
+		
+		if (changes.rotation) {
+			this.rotation = ~~newState.rotation;
+			this.renderRotation();
 		}
 	},
 	
@@ -1033,7 +1061,7 @@ Movable = Classy(Stateful, {
 		
 		// Get the cards that overlap above this card (recursively).
 		
-		// Get cards with z >= the lowest base cardthis card's z.
+		// Get cards with z >= the lowest base card's z.
 		var cardsAbove = ZIndexCache.getAbove(lowestZ);
 		// Ones of these that overlap with this card (or with one that does, etc),
 		// will need to be raised along with this one.
@@ -1074,7 +1102,7 @@ Movable = Classy(Stateful, {
 		for (i = 0; i < numCardsToRaise; i++) {
 			var card = cardsToRaise[i];
 			
-			zDelta = card.z - zPrev;
+			var zDelta = card.z - zPrev;
 			zPrev = card.z;
 			
 			if (zDelta > 1) {
@@ -1098,8 +1126,16 @@ Movable = Classy(Stateful, {
 			this.user.getId() === me.getId());
 	},
 	
+	// flip and peek are implemented in the Flippable subclass.
 	flip: function () {},
 	peek: function () {},
+	
+	rotate: function () {
+		this.oldRotation = this.rotation;
+		this.rotation += 90;
+		this.rotation %= 360;
+		this.queueUpdate();
+	},
 	
 	/* ---------------------------- View functions ---------------------------- */
 	
@@ -1219,8 +1255,36 @@ Movable = Classy(Stateful, {
 		ZIndexCache.add(this);
 		
 		this.oldZ = this.z;
-		this.dom.card.style.zIndex = this.z;
+		this.dom.rotator.style.zIndex = this.z;
 		if (this.z > highestZ) highestZ = this.z;
+	},
+	
+	renderRotation: function () {
+		var delta, rotator, t, oldRotation;
+		
+		oldRotation = this.oldRotation;
+		delta = this.rotation - oldRotation;
+		if (!delta) {
+			return;
+		}
+		
+		oldRotation += this.rounds*360;
+		
+		// prevent back spin
+		if (delta < 0) {
+			this.rounds++;
+			delta += 360;
+		}
+		
+		var $this = this;
+		rotator = function (n) {
+			return "rotate(" + (oldRotation + delta * n) + "deg)";
+		};
+		t = {};
+		t[Transition.cssTransformType] = rotator;
+		Transition(this.dom.rotator, t, transitionDuration);
+		
+		this.oldRotation = this.rotation;
 	}
 });
 
@@ -1233,7 +1297,8 @@ Flippable = Classy(Movable, {
 	peeking: false,   // we are peeking at the card
 	peeked: false,    // someone else is peeking at the card
 
-	stateNames: ["deck", "flip", "peek", "moving", "x", "y", "z", "user"],
+	stateNames: ["deck", "flip", "peek", "moving", "x", "y", "z", "user",
+		"rotation"],
 	
 	makeState: function () {
 		var state = Movable.prototype.makeState.call(this);
@@ -1247,7 +1312,9 @@ Flippable = Classy(Movable, {
 		
 		// Add a back node into the wrapper "prototype" node
 		wrapper = Movable.prototype.dom.wrapper.cloneNode(1);
-		card = wrapper.childNodes[0];
+		rotator = wrapper.childNodes[0];
+		card = rotator.childNodes[0];
+		label = wrapper.childNodes[1];
 		
 		front = document.createElement("div");
 		front.className = "front";
@@ -1258,7 +1325,12 @@ Flippable = Classy(Movable, {
 		card.appendChild(back);
 		
 		return {
-			wrapper: wrapper
+			wrapper: wrapper,
+			rotator: rotator,
+			label: label,
+			card: card,
+			front: front,
+			back: back
 		};
 	})(),
 	
@@ -1322,7 +1394,7 @@ Flippable = Classy(Movable, {
 	},
 	
 	renderFlip: function () {
-		var $this, faceup, a, halfWay, t, rotater;
+		var $this, faceup, a, halfWay, t, rotator;
 		
 		faceup = this.faceup;
 		$this = this;
@@ -1351,7 +1423,7 @@ Flippable = Classy(Movable, {
 				
 				// rotate to 0 from 180 or -180
 				a = faceup ? -1 : 1;
-				rotater = function (n) {
+				rotator = function (n) {
 					return "rotateY(" + 180*(a + -a*n) + "deg)";
 				};
 				
@@ -1362,18 +1434,18 @@ Flippable = Classy(Movable, {
 					"matrix(-1, 0, 0, 1, 0, 0)";
 				
 				// flip from -1 to 1, reverse to front
-				rotater = function (n) {
+				rotator = function (n) {
 					return "matrix(" + (-1 + 2*n) + ", 0, 0, 1, 0, 0)";
 				};
 				
 				halfWay = 2;
 			}
-			this.dom.card.style[cssTransform] = rotater(0);
+			this.dom.card.style[cssTransform] = rotator(0);
 			
 			// the transition needs a delay before it can be applied, for some reason.
 			setTimeout(function () {
 				t = {};
-				t[cssTransform] = rotater;
+				t[cssTransform] = rotator;
 				Transition($this.dom.card, t, transitionDuration, function () {
 					$this.dom.card.style[cssTransform] = "";
 					$this.dom.front.style[cssTransform] = "";
@@ -1414,7 +1486,7 @@ Card = Classy(Flippable, {
 	rank: 0,
 	
 	stateNames: ["deck", "suit", "rank", "flip", "peek", "moving",
-		"x", "y", "z", "user"],
+		"x", "y", "z", "user", "rotation"],
 	
 	makeState: function () {
 		var state = Flippable.prototype.makeState.call(this);
@@ -1515,7 +1587,7 @@ var CardSelection = {
 		y2 = -Infinity,
 		z1 = Infinity,
 		z2 = -Infinity;
-		for (i = cards.length; i--;) {
+		for (var i = cards.length; i--;) {
 			with(cards[i]) {
 				var x3 = x + width;
 				var y3 = y + height;
@@ -1708,6 +1780,14 @@ var CardSelection = {
 			card.z = zz - card.z;
 			card.faceup = !card.faceup;
 			card.queueUpdate();
+		});
+		Stateful.prototype.flushUpdates();
+	},
+	
+	// rotate selected cards by 90¡
+	rotate: function () {
+		this.cards.forEach(function (card) {
+			card.rotate();
 		});
 		Stateful.prototype.flushUpdates();
 	},
@@ -1960,7 +2040,7 @@ var SelectionBox = {
 /* ---------------------------- Player ---------------------------- */
 
 Player = Classy(Movable, {
-	stateNames: ["firstVisit", "hasMarker", "x", "y", "z", "user"],
+	stateNames: ["firstVisit", "hasMarker", "x", "y", "z", "user", "rotation"],
 	allPlayers: {},
 	width: 68,
 	height: 68,
@@ -1971,16 +2051,22 @@ Player = Classy(Movable, {
 	playerId: "",
 	
 	dom: (function () {
-		var wrapper, card;
+		var wrapper, card, avatar;
 		
 		wrapper = Movable.prototype.dom.wrapper.cloneNode(1);
 		addClass(wrapper, "playerMarker");
-		card = wrapper.childNodes[0];
+		rotator = wrapper.childNodes[0];
+		label = wrapper.childNodes[1];
+		card = rotator.childNodes[0];
 		avatar = document.createElement("img");
 		card.appendChild(avatar);
 		
 		return {
-			wrapper: wrapper
+			wrapper: wrapper,
+			rotator: rotator,
+			label: label,
+			card: card,
+			avatar: avatar,
 		};
 	})(),
 

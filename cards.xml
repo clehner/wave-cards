@@ -54,6 +54,7 @@
 				<dt>S</dt><dd>Shuffle the selected cards.</dd>
 				<dt>G</dt><dd>Group cards into a single stack.</dd>
 				<dt>P</dt><dd>Peek. Shows you the other side of the cards without other participants seeing. This simulates you holding the cards in your hand so that no one but you can see them. You can tell when someone is peeking at a card because it will have a dotted border.</dd>
+				<dt>R</dt><dd>Rotate the selected cards 90°.</dd>
 				</dl>
 			 
 				<h2>Alternative Controls</h2>

@@ -1,23 +1,20 @@
 /*
-This is the HTML structure:
+Here is the HTML structure:
 
 <div id="cardsWindow">
 	<div id="cardsContainer">
 		<div class="cardWrapper">
-			<div class="card">
-				<div class="front"></div>
-				<div class="back"></div>
+			<div class="rotator">
+				<div class="card">
+					<div class="front"></div>
+					<div class="back"></div>
+				</div>
 			</div>
 			<div class="label">
 		</div>
-		<div class="cardWrapper">
-			...
-		<div>
 		...
 	</div>
 </div>
-
-The reason for having a wrapper is to separate the label from the card so that it is not distorted by the flip rotation.
 */
 
 /* --------- Structure --------- */
@@ -76,6 +73,14 @@ The reason for having a wrapper is to separate the label from the card so that i
 	width: 73px;
 	height: 97px;
 	position: absolute;
+}
+
+.rotator {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
 }
 
 .card {
@@ -306,9 +311,6 @@ hr {
 	        border-radius: 34px; /* padding + border + size/2 */
 	   -moz-border-radius: 34px;
 	-webkit-border-radius: 34px;
-	-webkit-box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.4);
-	   -moz-box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.4);
-	        box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.4);
 }
 .playerMarker .card {
 	width: 68px; /* img.(size + 2*(padding + border)) */
