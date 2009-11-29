@@ -130,7 +130,7 @@ Transition = (function () {
 				}
 			}
 			if (!transitions.length) {
-				clearTimeout(timerValue);//setTimeout(timer, T.speed);
+				clearInterval(timerValue);
 				timerOn = false;
 			}
 		},

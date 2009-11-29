@@ -297,8 +297,10 @@ function onMouseDown(e) {
 
 function onMouseUp(e) {
 	// release the drag
-	drag.dragEnd();
-	drag = null;
+	if (drag) {
+		drag.dragEnd();
+		drag = null;
+	}
 	removeEventListener("mouseup", onMouseUp, false);
 	removeEventListener("mousemove", onDrag, false);
 	
@@ -1248,7 +1250,6 @@ Movable = Classy(Stateful, {
 		if (this.z > 100000) {
 			// problem: the z-index shouldn't get this high in the first place.
 			this.z = 0;
-			//throw new Error("z-index is too high!");
 		}
 		
 		ZIndexCache.remove(this, this.oldZ);
@@ -1276,13 +1277,18 @@ Movable = Classy(Stateful, {
 			delta += 360;
 		}
 		
-		var $this = this;
+		this.movingNow = true;
+		this.renderHighlight();
 		rotator = function (n) {
 			return "rotate(" + (oldRotation + delta * n) + "deg)";
 		};
 		t = {};
 		t[Transition.cssTransformType] = rotator;
-		Transition(this.dom.rotator, t, transitionDuration);
+		var $this = this;
+		Transition(this.dom.rotator, t, transitionDuration, function () {
+			$this.movingNow = false;
+			$this.renderHighlight();
+		});
 		
 		this.oldRotation = this.rotation;
 	}
