@@ -5,7 +5,9 @@
 		height="480"
 		description="Play card games in Google Wave."
 		author="Charles Lehner"
-		author_email="celehner1@gmail.com">
+		author_email="gadgets@lehnerstudios.com"
+		screenshot="http://wave-cards.googlecode.com/svn/trunk/images/screenshot.png"
+		thumbnail="http://wave-cards.googlecode.com/svn/trunk/images/thumbnail-120x60.png">
 	 <Require feature="wave"/>
 	</ModulePrefs>
 
