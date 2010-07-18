@@ -37,6 +37,11 @@ Here is the HTML structure:
 	height: 100%;
 }
 
+.layer {
+	position: absolute;
+	z-index: 1;
+}
+
 /* --------- Toolbar --------- */
 
 #buttons {
@@ -302,7 +307,7 @@ hr {
 	width: 68px;
 	height: 68px;
 }
-.playerMarker img {
+.playerMarker .avatar {
 	width: 40px;
 	height: 40px;
 	padding: 13px;
@@ -327,6 +332,6 @@ hr {
 .playerMarker.highlight .card {
 	outline: none;
 }
-.playerMarker.selected img {
+.playerMarker.selected .avatar {
 	border-style: dashed;
 }

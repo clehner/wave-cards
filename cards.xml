@@ -15,15 +15,13 @@
 	<![CDATA[
 	
 	<link rel="stylesheet" type="text/css"
-		href="http://wave-cards.googlecode.com/svn/trunk/cards.css?7"/>
-	<script type="text/javascript"
-		src="http://wave-api.appspot.com/public/wave.js"></script>
+		href="http://wave-cards.googlecode.com/svn/trunk/cards.css?8"/>
 	<script type="text/javascript"
 		src="http://wave-cards.googlecode.com/svn/trunk/classy.js"></script>
 	<script type="text/javascript"
 		src="http://wave-cards.googlecode.com/svn/trunk/transitions.js?4"></script>
 	<script type="text/javascript"
-		src="http://wave-cards.googlecode.com/svn/trunk/cards.js?7"></script>
+		src="http://wave-cards.googlecode.com/svn/trunk/cards.js?8"></script>
 	
 	<div id="cardsWindow">
 		<div id="buttons">
@@ -73,7 +71,7 @@
 				<dt><button>?</button></dt>
 				<dd>Show this help box.</dd>
 				<dt><button>&crarr;</button></dt>
-				<dd>Rotate your view of the board 180&deg;, so you can play across from another person.</dd>
+				<dd>Rotate your view of the board 180°, so you can play across from another person.</dd>
 				<dt><button>Decks</button></dt>
 				<dd>Add or remove decks from the table. You can choose to add a deck with or without jokers, and shuffled or unshuffled.</dd>
 				<dt><button><img id="addMarkerIcon" src="https://wave.google.com/wave/static/images/unknown.jpg" alt="your icon" /></button></dt>
