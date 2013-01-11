@@ -20,12 +20,7 @@ Here is the HTML structure:
 /* --------- Structure --------- */
 
 #cardsWindow {
-	position: absolute;
-	top: 0;
-	left: 0;
-	bottom: 0;
-	right: 0;
-	border: none;
+	height: 480px;
 	-webkit-perspective: 800;
 	-webkit-user-select: none;
 	border: 1px solid #bbb;

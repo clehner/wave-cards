@@ -85,6 +85,7 @@ function $(id) {
 function gadgetLoad() {
 	// run once
 	if (gadgetLoaded) return;
+	gadgets.window.adjustHeight();
 
 	// Get DOM references
 	cardsContainer = Movable.prototype.container = $("cards");
