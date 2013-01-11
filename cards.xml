@@ -6,8 +6,8 @@
 		description="Play card games in Google Wave."
 		author="Charles Lehner"
 		author_email="gadgets@lehnerstudios.com"
-		screenshot="http://wave-cards.googlecode.com/svn/trunk/images/screenshot.png"
-		thumbnail="http://wave-cards.googlecode.com/svn/trunk/images/thumbnail-120x60.png">
+		screenshot="//celehner.com/gadgets/cards/images/screenshot.png"
+		thumbnail="//celehner.com/gadgets/cards/images/thumbnail-120x60.png">
 	 <Require feature="wave"/>
 	</ModulePrefs>
 
@@ -15,13 +15,10 @@
 	<![CDATA[
 	
 	<link rel="stylesheet" type="text/css"
-		href="http://wave-cards.googlecode.com/svn/trunk/cards.css?8"/>
-	<script type="text/javascript"
-		src="http://wave-cards.googlecode.com/svn/trunk/classy.js"></script>
-	<script type="text/javascript"
-		src="http://wave-cards.googlecode.com/svn/trunk/transitions.js?4"></script>
-	<script type="text/javascript"
-		src="http://wave-cards.googlecode.com/svn/trunk/cards.js?8"></script>
+		href="//celehner.com/gadgets/cards/cards.css"/>
+	<script src="//celehner.com/gadgets/cards/classy.js"></script>
+	<script src="//celehner.com/gadgets/cards/transitions.js"></script>
+	<script src="//celehner.com/gadgets/cards/cards.js"></script>
 	
 	<div id="cardsWindow">
 		<div id="buttons">
@@ -29,7 +26,7 @@
 			<button id="rotateBtn" title="Turn the table">&crarr;</button>
 			<button id="decksBtn" title="Add or remove decks">Decks</button>
 			<button id="addMarkerBtn" title="Add/remove your player marker">
-				<img id="addMarkerIcon" src="https://wave.google.com/wave/static/images/unknown.jpg" alt="" />
+				<img id="addMarkerIcon" src="//celehner.com/gadgets/participant.jpg" alt="" />
 			</button>
 		</div>
 		

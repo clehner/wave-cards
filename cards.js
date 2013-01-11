@@ -1725,7 +1725,7 @@ PlayerMarker = Classy(Movable, {
 		this.dom.wrapper.title = participant ? participant.getDisplayName() :
 			this.playerId + " (not present in this wave)";
 		this.dom.avatar.src = participant ? participant.getThumbnailUrl() :
-			"https://wave.google.com/wave/static/images/unknown.jpg";
+			"//celehner.com/gadgets/participant.jpg";
 	},
 
 	toggle: function () {
