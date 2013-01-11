@@ -1,9 +1,8 @@
 /*
 Wave-Cards
-A Google Wave Gadget for playing cards
-v1.0
+An OpenSocial gadget for playing cards
 
-Copyright (c) 2009 Charles Lehner
+Copyright (c) 2009-2013 Charles Lehner
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
