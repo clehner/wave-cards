@@ -13,13 +13,13 @@
 
 	<Content type="html">
 	<![CDATA[
-	
+
 	<link rel="stylesheet" type="text/css"
 		href="//celehner.com/gadgets/cards/cards.css"/>
 	<script src="//celehner.com/gadgets/cards/classy.js"></script>
 	<script src="//celehner.com/gadgets/cards/transitions.js"></script>
 	<script src="//celehner.com/gadgets/cards/cards.js"></script>
-	
+
 	<div id="cardsWindow">
 		<div id="buttons">
 			<button id="helpBtn" title="Help">?</button>
@@ -29,20 +29,20 @@
 				<img id="addMarkerIcon" src="//celehner.com/gadgets/participant.jpg" alt="" />
 			</button>
 		</div>
-		
+
 		<div id="cards"></div>
-		
+
 		<div id="dialog">
 			<div id="close">
 				<span id="dialogTitle"></span>
 				<button id="closeDialogBtn" title="Close this message box">X</button>
 			</div>
-			
+
 			<div id="help" class="dialog">
 				<h1>Cards</h1>
 				<p>Welcome to the cards gadget!</p>
 				<p>Click and drag cards to move them around. To move several at once, select them by dragging a box around them. To add a card to the selection, shift-click it. You can tell which cards you have selected because they will have a dotted gray border.</p>
-			 
+
 				<h2>Keys</h2>
 				<p>Pressing these keys will affect the cards currently selected.</p>
 				<dl>
@@ -53,7 +53,7 @@
 				<dt>P</dt><dd>Peek. Shows you the other side of the cards without other participants seeing. This simulates you holding the cards in your hand so that no one but you can see them. You can tell when someone is peeking at a card because it will have a dotted border.</dd>
 				<dt>R</dt><dd>Rotate the selected cards 90°.</dd>
 				</dl>
-			 
+
 				<h2>Alternative Controls</h2>
 				<dl>
 				<dt>F</dt><dd><em>double-click</em>: flip</dd>
@@ -62,7 +62,7 @@
 				<dt>S</dt><dd><em>alt + double-click</em>: shuffle selection</dd>
 				<dt>U</dt><dd><em>dragging with the right mouse button</em>: drag under other cards</dd>
 				</dl>
-				
+
 				<h2>Buttons</h2>
 				<dl class="wide">
 				<dt><button>?</button></dt>
@@ -75,7 +75,7 @@
 				<dd>Add or remove your player marker from the table. You can move this around like a card and use it to indicate your area of the table.</dd>
 				</dl>
 			</div>
-			
+
 			<div id="decks" class="dialog">
 				<h2>Decks currently on the table:</h2>
 				<ol id="decksList"></ol>
